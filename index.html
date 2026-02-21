@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>U8g2 Font Preview</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d1117;
+      --bg2:     #161b22;
+      --bg3:     #21262d;
+      --border:  #30363d;
+      --text:    #c9d1d9;
+      --muted:   #8b949e;
+      --accent:  #58a6ff;
+      --accent2: #f78166;
+    }
+
+    body {
+      font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 14px; font-weight: 600; color: var(--accent); }
+    .hlinks a {
+      color: var(--muted); text-decoration: none; font-size: 12px;
+      margin-left: 10px; padding: 2px 7px;
+      border: 1px solid var(--border); border-radius: 4px;
+    }
+    .hlinks a:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    .layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 190px; min-width: 190px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-inner {
+      padding: 10px; overflow-y: auto;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+
+    .sec-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin-bottom: 8px;
+    }
+
+    .search-input {
+      width: 100%; padding: 5px 8px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-size: 12px;
+      font-family: inherit; margin-bottom: 10px;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+
+    .filter-group { margin-bottom: 10px; }
+    .filter-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted); margin-bottom: 5px;
+    }
+
+    .range-wrap { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+    .range-wrap input[type=range] { flex: 1; accent-color: var(--accent); height: 3px; }
+    .range-num { font-size: 10px; color: var(--muted); min-width: 20px; text-align: right; }
+
+    .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+    .check-item { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    .check-item input[type=checkbox] {
+      width: 11px; height: 11px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;
+    }
+    .check-item label { font-size: 10px; color: var(--muted); cursor: pointer; user-select: none; }
+
+    /* ── Font list ── */
+    .font-list-wrap { flex: 1; overflow-y: auto; min-height: 0; }
+    .font-list-header {
+      padding: 4px 10px; font-size: 10px; color: var(--muted);
+      background: var(--bg2); position: sticky; top: 0;
+      border-bottom: 1px solid var(--border); z-index: 1;
+    }
+    .font-item {
+      padding: 3px 10px; font-size: 11px; cursor: pointer; color: var(--muted);
+      border-left: 2px solid transparent;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .font-item:hover { background: var(--bg3); color: var(--text); }
+    .font-item.selected { background: var(--bg3); color: var(--accent); border-left-color: var(--accent); }
+
+    /* ── Content ── */
+    .content { flex: 1; display: flex; flex-direction: column; overflow: auto; min-width: 0; }
+    .preview-area { padding: 14px; flex-shrink: 0; }
+
+    .controls {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: 8px; margin-bottom: 12px;
+    }
+    .text-input {
+      flex: 1; min-width: 160px; padding: 5px 8px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-size: 13px; font-family: inherit;
+    }
+    .text-input:focus { outline: none; border-color: var(--accent); }
+
+    .ctrl-group { display: flex; align-items: center; gap: 5px; }
+    .ctrl-group label { font-size: 11px; color: var(--muted); }
+    .num-input {
+      width: 54px; padding: 4px 6px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-size: 12px;
+      font-family: inherit; text-align: right;
+    }
+    .num-input:focus { outline: none; border-color: var(--accent); }
+    select.num-input { width: auto; cursor: pointer; text-align: left; }
+
+    .canvas-outer {
+      display: inline-block;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .font-meta {
+      margin-top: 10px; display: flex; flex-wrap: wrap;
+      align-items: center; gap: 8px;
+    }
+    .font-name-disp { font-size: 12px; color: var(--accent2); font-weight: 600; }
+    .meta-btn {
+      font-size: 11px; color: var(--muted); text-decoration: none;
+      padding: 2px 7px; border: 1px solid var(--border); border-radius: 4px;
+      background: transparent; cursor: pointer; font-family: inherit;
+    }
+    .meta-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .status-line { margin-top: 6px; font-size: 11px; color: var(--muted); min-height: 16px; }
+
+    /* ── Bottom panels ── */
+    .bottom {
+      border-top: 1px solid var(--border);
+      padding: 14px; display: flex; flex-wrap: wrap; gap: 16px; flex-shrink: 0;
+    }
+    .panel { flex: 1; min-width: 240px; }
+    .panel h3 {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin-bottom: 8px;
+    }
+    .tool-list { list-style: none; }
+    .tool-list li { margin-bottom: 8px; }
+    .tool-list a { color: var(--accent); text-decoration: none; font-size: 12px; }
+    .tool-list a:hover { text-decoration: underline; }
+    .tool-desc { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; }
+    .credits-text { font-size: 11px; color: var(--muted); line-height: 1.7; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    @media (max-width: 680px) {
+      .sidebar { width: 155px; min-width: 155px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>U8g2 Font Preview</h1>
+  <div class="hlinks">
+    <a href="https://github.com/olikraus/u8g2" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/olikraus/u8g2/wiki/fntlistall" target="_blank" rel="noopener">Font Wiki</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sec-title">Filters</div>
+      <input class="search-input" type="search" id="searchInput"
+             placeholder="🔍 search…" autocomplete="off" spellcheck="false">
+
+      <div class="filter-group">
+        <div class="filter-label">Height (px)</div>
+        <div class="range-wrap">
+          <span style="font-size:10px;color:var(--muted)">min</span>
+          <input type="range" id="heightMin" min="4" max="99" value="4">
+          <span class="range-num" id="heightMinVal">4</span>
+        </div>
+        <div class="range-wrap">
+          <span style="font-size:10px;color:var(--muted)">max</span>
+          <input type="range" id="heightMax" min="4" max="99" value="99">
+          <span class="range-num" id="heightMaxVal">99</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Mode</div>
+        <div class="check-grid">
+          <div class="check-item"><input type="checkbox" id="m_t" value="t" checked><label for="m_t">t trans</label></div>
+          <div class="check-item"><input type="checkbox" id="m_h" value="h" checked><label for="m_h">h height</label></div>
+          <div class="check-item"><input type="checkbox" id="m_m" value="m" checked><label for="m_m">m mono</label></div>
+          <div class="check-item"><input type="checkbox" id="m_8" value="8" checked><label for="m_8">8 tile</label></div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Charset</div>
+        <div class="check-grid">
+          <div class="check-item"><input type="checkbox" id="c_r" value="r" checked><label for="c_r">r ascii</label></div>
+          <div class="check-item"><input type="checkbox" id="c_f" value="f" checked><label for="c_f">f full</label></div>
+          <div class="check-item"><input type="checkbox" id="c_n" value="n" checked><label for="c_n">n nums</label></div>
+          <div class="check-item"><input type="checkbox" id="c_u" value="u" checked><label for="c_u">u upper</label></div>
+          <div class="check-item"><input type="checkbox" id="c_e" value="e" checked><label for="c_e">e ext</label></div>
+          <div class="check-item"><input type="checkbox" id="c_s" value="s" checked><label for="c_s">s sym</label></div>
+          <div class="check-item"><input type="checkbox" id="c_c" value="c" checked><label for="c_c">c cyr</label></div>
+          <div class="check-item"><input type="checkbox" id="c_i" value="i" checked><label for="c_i">i icons</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="font-list-wrap">
+      <div class="font-list-header" id="fontCount">Loading…</div>
+      <div id="fontList"></div>
+    </div>
+  </div>
+
+  <!-- ── Main content ── -->
+  <div class="content">
+    <div class="preview-area">
+      <div class="controls">
+        <input class="text-input" type="text" id="previewText"
+               value="Hello, World!" placeholder="Preview text…" spellcheck="false">
+        <div class="ctrl-group">
+          <label for="dispW">W:</label>
+          <input class="num-input" type="number" id="dispW" value="128" min="8" max="512">
+        </div>
+        <div class="ctrl-group">
+          <label for="dispH">H:</label>
+          <input class="num-input" type="number" id="dispH" value="64" min="8" max="512">
+        </div>
+        <div class="ctrl-group">
+          <label for="scaleSelect">Scale:</label>
+          <select class="num-input" id="scaleSelect">
+            <option value="1">1×</option>
+            <option value="2" selected>2×</option>
+            <option value="3">3×</option>
+            <option value="4">4×</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="canvas-outer">
+        <canvas id="previewCanvas" width="256" height="128"></canvas>
+      </div>
+
+      <div class="font-meta">
+        <span class="font-name-disp" id="fontNameDisp">Select a font</span>
+        <a id="wikiLink"  class="meta-btn" href="#" target="_blank" rel="noopener" style="display:none">↗ Wiki page</a>
+        <a id="srcLink"   class="meta-btn" href="#" target="_blank" rel="noopener" style="display:none">↗ .c source</a>
+        <button id="copyBtn" class="meta-btn" style="display:none">Copy name</button>
+      </div>
+      <div class="status-line" id="statusLine"></div>
+    </div>
+
+    <div class="bottom">
+      <div class="panel">
+        <h3>Related Tools</h3>
+        <ul class="tool-list">
+          <li>
+            <a href="https://stncrn.github.io/u8g2-unifont-helper/" target="_blank" rel="noopener">U8g2 Unifont Helper</a>
+            <span class="tool-desc">Generate custom U8g2 fonts from Unifont; CJK / Cyrillic / special Unicode subsets</span>
+          </li>
+          <li>
+            <a href="https://stonez56.com/u8g2/" target="_blank" rel="noopener">stonez56 U8g2 Generator</a>
+            <span class="tool-desc">Custom Chinese / Japanese / Korean font generation for U8g2</span>
+          </li>
+          <li>
+            <a href="https://github.com/olikraus/u8g2/wiki/fntlistall" target="_blank" rel="noopener">U8g2 Font Wiki (fntlistall)</a>
+            <span class="tool-desc">Official reference with static previews organized by pixel height</span>
+          </li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Credits</h3>
+        <p class="credits-text">
+          U8g2 © Oliver Kraus (LGPL 2.1) · BDF fonts © their respective authors (various open
+          licenses) · Font data served via jsDelivr CDN · This tool is MIT licensed · No data
+          collected · BDF-sourced fonts render live; TTF-derived fonts show a note linking to
+          the static U8g2 wiki images.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Constants ────────────────────────────────────────────────────────────────
+const FONT_LIST_URL = 'https://raw.githubusercontent.com/wiki/olikraus/u8g2/fntlistallplain.md';
+const BDF_BASE      = 'https://cdn.jsdelivr.net/gh/olikraus/u8g2@master/tools/font/bdf/';
+const WIKI_BASE     = 'https://github.com/olikraus/u8g2/wiki/fntgrp';
+const SRC_BASE      = 'https://github.com/olikraus/u8g2/blob/master/tools/font/build/single_font_files/';
+const CACHE_KEY     = 'u8g2fonts_v2';
+
+// ── State ────────────────────────────────────────────────────────────────────
+let allFonts      = [];   // [{name, baseName, family, height, mode, charset}]
+let filteredFonts = [];
+let selectedName  = null;
+const bdfCache    = {};   // baseName → parsed BDF object | null
+
+// ── Font name parser ─────────────────────────────────────────────────────────
+// u8g2_font_ncenB08_tr → {baseName:'ncenB08', family:'ncenB', height:8, mode:'t', charset:'r'}
+function parseFont(name) {
+  const base = name.replace(/^u8g2_font_/, '');
+  const idx  = base.lastIndexOf('_');
+  if (idx < 1) return null;
+
+  const baseName = base.slice(0, idx);
+  const suffix   = base.slice(idx + 1);
+  if (!baseName || !suffix) return null;
+
+  const mode    = suffix[0];
+  const charset = suffix.slice(1); // may be empty for single-char suffixes
+
+  // Extract trailing digit run as height; rest is family
+  const hm     = baseName.match(/(\d+)$/);
+  const height  = hm ? parseInt(hm[1]) : 0;
+  // For pure dimension names like "5x7", "6x12" the whole baseName is the family
+  const family  = (hm && !/^\d+x\d+$/.test(baseName))
+    ? baseName.slice(0, -hm[0].length)
+    : baseName;
+
+  return { name, baseName, family, height, mode, charset };
+}
+
+// ── Charset → filter key ─────────────────────────────────────────────────────
+function charsetKey(cs) {
+  if (!cs)              return 's';
+  if (cs === 'r')       return 'r';
+  if (cs === 'f')       return 'f';
+  if (cs === 'n')       return 'n';
+  if (cs === 'u')       return 'u';
+  if (cs === 'e')       return 'e';
+  if (cs.includes('cyr'))  return 'c';
+  if (cs.includes('icon')) return 'i';
+  return 's'; // symbols, latin ext, others
+}
+
+// ── Font list loader ─────────────────────────────────────────────────────────
+async function loadFontList() {
+  // Try session cache first
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      allFonts = JSON.parse(cached);
+      applyFilters();
+      setStatus('');
+      return;
+    }
+  } catch (_) {}
+
+  setStatus('Loading font list…');
+  document.getElementById('fontCount').textContent = 'Loading…';
+
+  let text;
+  try {
+    const r = await fetch(FONT_LIST_URL);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    text = await r.text();
+  } catch (e) {
+    document.getElementById('fontCount').textContent = 'Load failed';
+    setStatus(`Error loading font list: ${e.message}`);
+    return;
+  }
+
+  const seen = new Set();
+  const fonts = [];
+  for (const line of text.split('\n')) {
+    const matches = line.match(/\bu8g2_font_\w+\b/g);
+    if (!matches) continue;
+    for (const name of matches) {
+      if (seen.has(name)) continue;
+      seen.add(name);
+      const font = parseFont(name);
+      if (font) fonts.push(font);
+    }
+  }
+
+  allFonts = fonts;
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(allFonts)); } catch (_) {}
+
+  applyFilters();
+  setStatus('');
+}
+
+// ── Filtering ────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const hMin   = parseInt(document.getElementById('heightMin').value);
+  const hMax   = parseInt(document.getElementById('heightMax').value);
+
+  const activeModes = new Set(
+    [...document.querySelectorAll('[id^="m_"]')].filter(el => el.checked).map(el => el.value)
+  );
+  const activeCharsets = new Set(
+    [...document.querySelectorAll('[id^="c_"]')].filter(el => el.checked).map(el => el.value)
+  );
+
+  filteredFonts = allFonts.filter(f => {
+    if (search && !f.name.toLowerCase().includes(search)) return false;
+    if (f.height > 0 && (f.height < hMin || f.height > hMax)) return false;
+    if (!activeModes.has(f.mode)) return false;
+    if (!activeCharsets.has(charsetKey(f.charset))) return false;
+    return true;
+  });
+
+  renderFontList();
+}
+
+// ── Font list DOM renderer ───────────────────────────────────────────────────
+function renderFontList() {
+  document.getElementById('fontCount').textContent =
+    `${filteredFonts.length} / ${allFonts.length} fonts`;
+
+  document.getElementById('fontList').innerHTML = filteredFonts.map(f => {
+    const sel  = f.name === selectedName ? ' selected' : '';
+    const disp = f.name.replace('u8g2_font_', '');
+    return `<div class="font-item${sel}" data-name="${f.name}" title="${f.name}">${disp}</div>`;
+  }).join('');
+}
+
+// ── Font selection ───────────────────────────────────────────────────────────
+function selectFont(name) {
+  if (name === selectedName) return;
+  selectedName = name;
+
+  // Update highlight
+  document.querySelectorAll('.font-item').forEach(el =>
+    el.classList.toggle('selected', el.dataset.name === name)
+  );
+  const el = document.querySelector(`.font-item[data-name="${CSS.escape(name)}"]`);
+  if (el) el.scrollIntoView({ block: 'nearest' });
+
+  const font = allFonts.find(f => f.name === name);
+  if (!font) return;
+
+  // Update meta bar
+  document.getElementById('fontNameDisp').textContent = name;
+  const wikiLink = document.getElementById('wikiLink');
+  const srcLink  = document.getElementById('srcLink');
+  const copyBtn  = document.getElementById('copyBtn');
+
+  // Wiki family: for dimension names like "5x7" use baseName; for "ncenB" use family
+  const wikiFam = font.family.toLowerCase();
+  wikiLink.href = WIKI_BASE + wikiFam;
+  wikiLink.style.display = '';
+  srcLink.href  = `${SRC_BASE}${name}.c`;
+  srcLink.style.display = '';
+  copyBtn.style.display = '';
+
+  renderPreview();
+}
+
+// ── BDF Parser ───────────────────────────────────────────────────────────────
+function parseBDF(text) {
+  const glyphs    = new Map();
+  let fontAscent  = 0;
+  let fontDescent = 0;
+
+  const lines = text.split('\n');
+  let i = 0;
+  const n = lines.length;
+
+  // Global header — collect FONT_ASCENT / FONT_DESCENT until CHARS line
+  while (i < n) {
+    const line = lines[i++].trim();
+    if (line.startsWith('FONT_ASCENT'))        fontAscent  = parseInt(line.split(/\s+/)[1]);
+    else if (line.startsWith('FONT_DESCENT'))  fontDescent = Math.abs(parseInt(line.split(/\s+/)[1]));
+    else if (/^CHARS(\s|$)/.test(line))        break;
+  }
+
+  // Glyph loop
+  while (i < n) {
+    const startLine = lines[i++].trim();
+    if (!startLine.startsWith('STARTCHAR')) continue;
+
+    let encoding = -1, dwidth = 0;
+    let bbxW = 0, bbxH = 0, bbxX = 0, bbxY = 0;
+    const bitmapRows = [];
+    let inBitmap = false;
+
+    inner: while (i < n) {
+      const line = lines[i++].trim();
+      if (!line) continue;
+
+      if (line.startsWith('ENCODING'))      encoding = parseInt(line.split(/\s+/)[1]);
+      else if (line.startsWith('DWIDTH'))   dwidth   = parseInt(line.split(/\s+/)[1]);
+      else if (line.startsWith('BBX')) {
+        const p = line.split(/\s+/);
+        bbxW = parseInt(p[1]); bbxH = parseInt(p[2]);
+        bbxX = parseInt(p[3]); bbxY = parseInt(p[4]);
+      }
+      else if (line === 'BITMAP')  inBitmap = true;
+      else if (line === 'ENDCHAR') break inner;
+      else if (inBitmap) {
+        // Each pair of hex chars = 1 byte (MSB = leftmost pixel)
+        const bytes = [];
+        for (let b = 0; b < line.length; b += 2)
+          bytes.push(parseInt(line.slice(b, b + 2), 16));
+        bitmapRows.push(bytes);
+      }
+    }
+
+    if (encoding > 0 && encoding < 65536) {
+      glyphs.set(encoding, { dwidth, bbxW, bbxH, bbxX, bbxY, bitmapRows });
+    }
+  }
+
+  return { glyphs, fontAscent, fontDescent };
+}
+
+// ── BDF fetch with cache ─────────────────────────────────────────────────────
+async function fetchBDF(baseName) {
+  if (baseName in bdfCache) return bdfCache[baseName];
+  try {
+    const r = await fetch(BDF_BASE + baseName + '.bdf');
+    if (!r.ok) { bdfCache[baseName] = null; return null; }
+    const parsed = parseBDF(await r.text());
+    bdfCache[baseName] = parsed;
+    return parsed;
+  } catch (_) {
+    bdfCache[baseName] = null;
+    return null;
+  }
+}
+
+// ── Text renderer (BDF → ImageData) ─────────────────────────────────────────
+function renderText(text, bdf, w, h) {
+  const { glyphs, fontAscent } = bdf;
+
+  // White canvas
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = data[i + 1] = data[i + 2] = 255;
+    data[i + 3] = 255;
+  }
+
+  // Measure total advance width
+  let textW = 0;
+  for (const ch of text) {
+    const g = glyphs.get(ch.codePointAt(0));
+    if (g) textW += g.dwidth;
+  }
+
+  const xStart   = Math.round((w - textW) / 2);
+  const baseline = Math.round(h / 2 + fontAscent / 2);
+
+  let penX = xStart;
+  for (const ch of text) {
+    const g = glyphs.get(ch.codePointAt(0));
+    if (!g) continue;
+
+    const { dwidth, bbxW, bbxH, bbxX, bbxY, bitmapRows } = g;
+
+    for (let row = 0; row < bbxH; row++) {
+      // BDF y_offset is from baseline upward; canvas Y goes downward
+      const cy = baseline - bbxY - bbxH + row;
+      if (cy < 0 || cy >= h) continue;
+
+      const bytes = bitmapRows[row];
+      if (!bytes) continue;
+
+      for (let col = 0; col < bbxW; col++) {
+        const cx = penX + bbxX + col;
+        if (cx < 0 || cx >= w) continue;
+
+        const byteIdx = col >> 3;        // floor(col / 8)
+        const bitIdx  = 7 - (col & 7);  // MSB first
+        if ((bytes[byteIdx] >> bitIdx) & 1) {
+          const idx = (cy * w + cx) * 4;
+          data[idx] = data[idx + 1] = data[idx + 2] = 0;
+          data[idx + 3] = 255;
+        }
+      }
+    }
+
+    penX += dwidth;
+  }
+
+  return new ImageData(data, w, h);
+}
+
+// ── Canvas display (with integer upscale) ───────────────────────────────────
+function showOnCanvas(imgData, scale, dispW, dispH) {
+  const canvas = document.getElementById('previewCanvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = dispW * scale;
+  canvas.height = dispH * scale;
+  ctx.imageSmoothingEnabled = false;
+
+  if (scale === 1) {
+    ctx.putImageData(imgData, 0, 0);
+  } else {
+    const tmp    = document.createElement('canvas');
+    tmp.width    = dispW;
+    tmp.height   = dispH;
+    tmp.getContext('2d').putImageData(imgData, 0, 0);
+    ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+  }
+}
+
+function clearCanvas(dispW, dispH, scale, pattern) {
+  const canvas  = document.getElementById('previewCanvas');
+  canvas.width  = dispW * scale;
+  canvas.height = dispH * scale;
+  const ctx     = canvas.getContext('2d');
+  if (pattern === 'cross') {
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(canvas.width, canvas.height);
+    ctx.moveTo(canvas.width, 0); ctx.lineTo(0, canvas.height);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function drawPlaceholder(msg) {
+  const canvas = document.getElementById('previewCanvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.fillStyle = '#999';
+  ctx.font      = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
+}
+
+// ── Main render pipeline ─────────────────────────────────────────────────────
+async function renderPreview() {
+  if (!selectedName) return;
+
+  const font = allFonts.find(f => f.name === selectedName);
+  if (!font) return;
+
+  const text  = document.getElementById('previewText').value;
+  const dispW = Math.max(8, Math.min(512, parseInt(document.getElementById('dispW').value)  || 128));
+  const dispH = Math.max(8, Math.min(512, parseInt(document.getElementById('dispH').value)  || 64));
+  const scale = parseInt(document.getElementById('scaleSelect').value) || 2;
+
+  setStatus('Loading BDF…');
+  clearCanvas(dispW, dispH, scale, 'white');
+  drawPlaceholder('Loading…');
+
+  const bdf = await fetchBDF(font.baseName);
+
+  if (!bdf) {
+    clearCanvas(dispW, dispH, scale, 'cross');
+    setStatus(
+      `No BDF source for "${font.baseName}" — TTF-derived font. ` +
+      `Static preview: https://github.com/olikraus/u8g2/wiki/fntlistall`
+    );
+    return;
+  }
+
+  const imgData = renderText(text, bdf, dispW, dispH);
+  showOnCanvas(imgData, scale, dispW, dispH);
+  setStatus(`${font.baseName}.bdf · ascent ${bdf.fontAscent} · ${bdf.glyphs.size} glyphs`);
+}
+
+// ── Utility ──────────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('statusLine').textContent = msg;
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ── Event wiring ─────────────────────────────────────────────────────────────
+function setupEvents() {
+  // Font list clicks (delegated)
+  document.getElementById('fontList').addEventListener('click', e => {
+    const item = e.target.closest('.font-item');
+    if (item) selectFont(item.dataset.name);
+  });
+
+  // Preview text
+  document.getElementById('previewText').addEventListener('input', debounce(renderPreview, 200));
+
+  // Display size / scale
+  const triggerRender = debounce(renderPreview, 300);
+  document.getElementById('dispW').addEventListener('input', triggerRender);
+  document.getElementById('dispH').addEventListener('input', triggerRender);
+  document.getElementById('scaleSelect').addEventListener('change', renderPreview);
+
+  // Search
+  document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 150));
+
+  // Height range sliders
+  document.getElementById('heightMin').addEventListener('input', function () {
+    let v = parseInt(this.value);
+    const max = parseInt(document.getElementById('heightMax').value);
+    if (v > max) { v = max; this.value = v; }
+    document.getElementById('heightMinVal').textContent = v;
+    applyFilters();
+  });
+  document.getElementById('heightMax').addEventListener('input', function () {
+    let v = parseInt(this.value);
+    const min = parseInt(document.getElementById('heightMin').value);
+    if (v < min) { v = min; this.value = v; }
+    document.getElementById('heightMaxVal').textContent = v;
+    applyFilters();
+  });
+
+  // Mode / charset checkboxes
+  document.querySelectorAll('[id^="m_"], [id^="c_"]').forEach(el =>
+    el.addEventListener('change', applyFilters)
+  );
+
+  // Copy name
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    if (!selectedName) return;
+    navigator.clipboard.writeText(selectedName).then(() => {
+      const btn = document.getElementById('copyBtn');
+      const prev = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = prev; }, 1200);
+    });
+  });
+
+  // Initial placeholder canvas
+  const canvas = document.getElementById('previewCanvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.fillStyle = '#f5f5f5';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#999';
+  ctx.font      = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Select a font from the list', canvas.width / 2, canvas.height / 2);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+setupEvents();
+loadFontList();
+</script>
+</body>
+</html>
