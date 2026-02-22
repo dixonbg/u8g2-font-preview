@@ -2603,7 +2603,8 @@ function hasCodePointInRanges(ranges, cp) {
 function fontHasAllCodePoints(fontName, cps) {
   if (cps.length === 0) return true;
   const ranges = glyphRanges.get(fontName);
-  if (!ranges) return !glyphIndexReady;
+  // Unknown coverage should not hide fonts from char-search results.
+  if (!ranges) return true;
   return cps.every(cp => hasCodePointInRanges(ranges, cp));
 }
 
@@ -3044,15 +3045,15 @@ function parseBDF(text) {
 
 // ── BDF fetch with cache ─────────────────────────────────────────────────────
 async function fetchBDF(baseName) {
-  if (baseName in bdfCache) return bdfCache[baseName];
+  if (baseName in bdfCache && bdfCache[baseName]) return bdfCache[baseName];
   try {
     const r = await fetch(BDF_BASE + baseName + '.bdf');
-    if (!r.ok) { bdfCache[baseName] = null; return null; }
+    if (!r.ok) return null;
     const parsed = parseBDF(await r.text());
+    if (!parsed || !parsed.glyphs || parsed.glyphs.size === 0) return null;
     bdfCache[baseName] = parsed;
     return parsed;
   } catch (_) {
-    bdfCache[baseName] = null;
     return null;
   }
 }
@@ -3064,10 +3065,17 @@ function parseCFontBytes(text) {
   // Locate the array initialiser — handles both formats:
   //   const uint8_t name[N] = "..."          (old style)
   //   ...U8G2_FONT_SECTION("name") = "..."   (new style — most fonts)
-  // Match the first [)] or ] that is directly followed by optional whitespace then '='.
-  const eqMatch = text.match(/[)\]]\s*=/);
-  if (!eqMatch) return new Uint8Array(0);
-  const afterEq = text.slice(eqMatch.index + eqMatch[0].length);
+  // Prefer a declaration-anchored match to avoid false '=' hits elsewhere.
+  const declMatch = text.match(/const\s+uint8_t\s+\w+\s*\[[^\]]*\][\s\S]{0,200}?=\s*/m);
+  let afterEq;
+  if (declMatch) {
+    afterEq = text.slice(declMatch.index + declMatch[0].length);
+  } else {
+    // Fallback: first direct [)] or ] then '=' sequence.
+    const eqMatch = text.match(/[)\]]\s*=/);
+    if (!eqMatch) return new Uint8Array(0);
+    afterEq = text.slice(eqMatch.index + eqMatch[0].length);
+  }
 
   const bytes = [];
   // Match each "..." string literal (handles escaped chars inside)
@@ -3287,14 +3295,19 @@ function parseU8G2Font(text) {
   const fontDescent = Math.abs(hdr.descent_g);
   const glyphs      = new Map();
 
+  const base8Start = 23;
   const upperStart = 23 + hdr.start_pos_upper_A;
   const lowerStart = 23 + hdr.start_pos_lower_a;
   const unicodeStart = 23 + hdr.start_pos_unicode;
 
-  if (upperStart < bytes.length) {
+  // Parse the full 8-bit section first; upper/lower offsets are pointers into it.
+  if (base8Start < bytes.length) {
+    walkSection(hdr, bytes, base8Start, glyphs);
+  }
+  if (upperStart < bytes.length && upperStart !== base8Start) {
     walkSection(hdr, bytes, upperStart, glyphs);
   }
-  if (lowerStart < bytes.length && lowerStart !== upperStart) {
+  if (lowerStart < bytes.length && lowerStart !== upperStart && lowerStart !== base8Start) {
     walkSection(hdr, bytes, lowerStart, glyphs);
   }
   if (unicodeStart < bytes.length && hdr.start_pos_unicode > 0) {
@@ -3306,15 +3319,15 @@ function parseU8G2Font(text) {
 
 // Step F: fetch .c with cache
 async function fetchU8G2(fontName) {
-  if (fontName in u8g2Cache) return u8g2Cache[fontName];
+  if (fontName in u8g2Cache && u8g2Cache[fontName]) return u8g2Cache[fontName];
   try {
     const r = await fetch(U8G2_FONT_BASE + fontName + '.c');
-    if (!r.ok) { u8g2Cache[fontName] = null; return null; }
+    if (!r.ok) return null;
     const parsed = parseU8G2Font(await r.text());
+    if (!parsed || !parsed.glyphs || parsed.glyphs.size === 0) return null;
     u8g2Cache[fontName] = parsed;
     return parsed;
   } catch (_) {
-    u8g2Cache[fontName] = null;
     return null;
   }
 }
