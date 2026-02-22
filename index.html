@@ -85,12 +85,16 @@
     .range-wrap input[type=range] { flex: 1; accent-color: var(--accent); height: 3px; }
     .range-num { font-size: 10px; color: var(--muted); min-width: 20px; text-align: right; }
 
+    /* ── Tri-state filter buttons ── */
     .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
-    .check-item { display: flex; align-items: center; gap: 4px; cursor: pointer; }
-    .check-item input[type=checkbox] {
-      width: 11px; height: 11px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;
+    .tri-check {
+      padding: 2px 5px; border-radius: 3px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--muted); font-size: 10px;
+      cursor: pointer; font-family: inherit; text-align: left;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .check-item label { font-size: 10px; color: var(--muted); cursor: pointer; user-select: none; }
+    .tri-check[data-state="req"] { background: #122112; border-color: #3fb950; color: #3fb950; }
+    .tri-check[data-state="exc"] { background: #210e0e; border-color: #f85149; color: #f85149; }
 
     /* ── Font list ── */
     .font-list-wrap { flex: 1; overflow-y: auto; min-height: 0; }
@@ -103,9 +107,15 @@
       padding: 3px 10px; font-size: 11px; cursor: pointer; color: var(--muted);
       border-left: 2px solid transparent;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: flex; align-items: baseline; gap: 0;
     }
     .font-item:hover { background: var(--bg3); color: var(--text); }
     .font-item.selected { background: var(--bg3); color: var(--accent); border-left-color: var(--accent); }
+    .fh {
+      color: var(--muted); font-size: 9px; min-width: 20px;
+      display: inline-block; text-align: right; margin-right: 5px; flex-shrink: 0;
+    }
+    .font-item.selected .fh { color: var(--accent); opacity: 0.6; }
 
     /* ── Content ── */
     .content { flex: 1; display: flex; flex-direction: column; overflow: auto; min-width: 0; }
@@ -221,24 +231,36 @@
       <div class="filter-group">
         <div class="filter-label">Mode</div>
         <div class="check-grid">
-          <div class="check-item"><input type="checkbox" id="m_t" value="t" checked><label for="m_t">t trans</label></div>
-          <div class="check-item"><input type="checkbox" id="m_h" value="h" checked><label for="m_h">h height</label></div>
-          <div class="check-item"><input type="checkbox" id="m_m" value="m" checked><label for="m_m">m mono</label></div>
-          <div class="check-item"><input type="checkbox" id="m_8" value="8" checked><label for="m_8">8 tile</label></div>
+          <button class="tri-check" data-filter="mode" data-value="t" data-state="any"
+                  title="Transparent — no background fill behind glyph">trans</button>
+          <button class="tri-check" data-filter="mode" data-value="h" data-state="any"
+                  title="Common height — all glyphs padded to same height">height</button>
+          <button class="tri-check" data-filter="mode" data-value="m" data-state="any"
+                  title="Monospace — all glyphs same advance width">mono</button>
+          <button class="tri-check" data-filter="mode" data-value="8" data-state="any"
+                  title="8×8 tile — fixed 8-pixel grid, used for matrix/icon fonts">tile</button>
         </div>
       </div>
 
       <div class="filter-group">
         <div class="filter-label">Charset</div>
         <div class="check-grid">
-          <div class="check-item"><input type="checkbox" id="c_r" value="r" checked><label for="c_r">r ascii</label></div>
-          <div class="check-item"><input type="checkbox" id="c_f" value="f" checked><label for="c_f">f full</label></div>
-          <div class="check-item"><input type="checkbox" id="c_n" value="n" checked><label for="c_n">n nums</label></div>
-          <div class="check-item"><input type="checkbox" id="c_u" value="u" checked><label for="c_u">u upper</label></div>
-          <div class="check-item"><input type="checkbox" id="c_e" value="e" checked><label for="c_e">e ext</label></div>
-          <div class="check-item"><input type="checkbox" id="c_s" value="s" checked><label for="c_s">s sym</label></div>
-          <div class="check-item"><input type="checkbox" id="c_c" value="c" checked><label for="c_c">c cyr</label></div>
-          <div class="check-item"><input type="checkbox" id="c_i" value="i" checked><label for="c_i">i icons</label></div>
+          <button class="tri-check" data-filter="charset" data-value="r" data-state="any"
+                  title="r: ASCII printable, codepoints 32–127">ascii</button>
+          <button class="tri-check" data-filter="charset" data-value="f" data-state="any"
+                  title="f: Full — all glyphs in the font">full</button>
+          <button class="tri-check" data-filter="charset" data-value="n" data-state="any"
+                  title="n: Numbers and basic punctuation only">nums</button>
+          <button class="tri-check" data-filter="charset" data-value="u" data-state="any"
+                  title="u: Uppercase letters and digits">upper</button>
+          <button class="tri-check" data-filter="charset" data-value="e" data-state="any"
+                  title="e: Extended Latin (accented characters)">ext</button>
+          <button class="tri-check" data-filter="charset" data-value="s" data-state="any"
+                  title="s: Symbols and special characters">sym</button>
+          <button class="tri-check" data-filter="charset" data-value="c" data-state="any"
+                  title="c: Cyrillic alphabet">cyr</button>
+          <button class="tri-check" data-filter="charset" data-value="i" data-state="any"
+                  title="i: Icons and pictograms">icons</button>
         </div>
       </div>
     </div>
@@ -309,9 +331,8 @@
         <h3>Credits</h3>
         <p class="credits-text">
           U8g2 © Oliver Kraus (LGPL 2.1) · BDF fonts © their respective authors (various open
-          licenses) · Font data served via jsDelivr CDN · This tool is MIT licensed · No data
-          collected · BDF-sourced fonts render live; TTF-derived fonts show a note linking to
-          the static U8g2 wiki images.
+          licenses) · Font data served via jsDelivr CDN · No data collected · BDF-sourced fonts
+          render via .bdf files; TTF-derived fonts render via the U8g2 binary .c font format.
         </p>
       </div>
     </div>
@@ -322,63 +343,2119 @@
 'use strict';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const FONT_LIST_URL = 'https://raw.githubusercontent.com/wiki/olikraus/u8g2/fntlistallplain.md';
-const BDF_BASE      = 'https://cdn.jsdelivr.net/gh/olikraus/u8g2@master/tools/font/bdf/';
-const WIKI_BASE     = 'https://github.com/olikraus/u8g2/wiki/fntgrp';
-const SRC_BASE      = 'https://github.com/olikraus/u8g2/blob/master/tools/font/build/single_font_files/';
-const CACHE_KEY     = 'u8g2fonts_v2';
+const FONT_LIST_URL  = 'https://raw.githubusercontent.com/wiki/olikraus/u8g2/fntlistallplain.md';
+const BDF_BASE       = 'https://cdn.jsdelivr.net/gh/olikraus/u8g2@master/tools/font/bdf/';
+const U8G2_FONT_BASE = 'https://cdn.jsdelivr.net/gh/olikraus/u8g2@master/tools/font/build/single_font_files/';
+const WIKI_BASE      = 'https://github.com/olikraus/u8g2/wiki/fntgrp';
+const SRC_BASE       = 'https://github.com/olikraus/u8g2/blob/master/tools/font/build/single_font_files/';
+const CACHE_KEY      = 'u8g2fonts_v4';
+
+// Pre-computed font heights (generated by gen-heights.js).
+// Run `node gen-heights.js` to populate. Falls back to name-parsing + lazy
+// update on render for any fonts not in the table.
+const FONT_HEIGHTS = /* HEIGHTS_START */{
+  "u8g2_font_04b_03_tr":7,
+  "u8g2_font_04b_03b_tr":6,
+  "u8g2_font_10x20_me":17,
+  "u8g2_font_10x20_mf":17,
+  "u8g2_font_10x20_mn":20,
+  "u8g2_font_10x20_mr":17,
+  "u8g2_font_10x20_t_arabic":17,
+  "u8g2_font_10x20_t_cyrillic":17,
+  "u8g2_font_10x20_t_greek":17,
+  "u8g2_font_10x20_te":17,
+  "u8g2_font_10x20_tf":17,
+  "u8g2_font_10x20_tn":20,
+  "u8g2_font_10x20_tr":17,
+  "u8g2_font_12x6LED_mn":15,
+  "u8g2_font_12x6LED_tf":15,
+  "u8g2_font_12x6LED_tr":15,
+  "u8g2_font_3x3basic_tr":4,
+  "u8g2_font_3x5im_mr":7,
+  "u8g2_font_3x5im_te":7,
+  "u8g2_font_3x5im_tr":7,
+  "u8g2_font_4x6_mf":6,
+  "u8g2_font_4x6_mn":6,
+  "u8g2_font_4x6_mr":6,
+  "u8g2_font_4x6_t_cyrillic":6,
+  "u8g2_font_4x6_tf":6,
+  "u8g2_font_4x6_tn":6,
+  "u8g2_font_4x6_tr":6,
+  "u8g2_font_5x7_mf":7,
+  "u8g2_font_5x7_mn":7,
+  "u8g2_font_5x7_mr":7,
+  "u8g2_font_5x7_t_cyrillic":7,
+  "u8g2_font_5x7_tf":7,
+  "u8g2_font_5x7_tn":7,
+  "u8g2_font_5x7_tr":7,
+  "u8g2_font_5x8_mf":7,
+  "u8g2_font_5x8_mn":8,
+  "u8g2_font_5x8_mr":7,
+  "u8g2_font_5x8_t_cyrillic":7,
+  "u8g2_font_5x8_tf":7,
+  "u8g2_font_5x8_tn":8,
+  "u8g2_font_5x8_tr":7,
+  "u8g2_font_6x10_mf":9,
+  "u8g2_font_6x10_mn":10,
+  "u8g2_font_6x10_mr":9,
+  "u8g2_font_6x10_tf":9,
+  "u8g2_font_6x10_tn":10,
+  "u8g2_font_6x10_tr":9,
+  "u8g2_font_6x12_m_symbols":9,
+  "u8g2_font_6x12_me":9,
+  "u8g2_font_6x12_mf":9,
+  "u8g2_font_6x12_mn":12,
+  "u8g2_font_6x12_mr":9,
+  "u8g2_font_6x12_t_cyrillic":9,
+  "u8g2_font_6x12_t_symbols":9,
+  "u8g2_font_6x12_te":9,
+  "u8g2_font_6x12_tf":9,
+  "u8g2_font_6x12_tn":12,
+  "u8g2_font_6x12_tr":9,
+  "u8g2_font_6x13B_mf":11,
+  "u8g2_font_6x13B_mn":13,
+  "u8g2_font_6x13B_mr":11,
+  "u8g2_font_6x13B_t_cyrillic":11,
+  "u8g2_font_6x13B_t_hebrew":11,
+  "u8g2_font_6x13B_tf":11,
+  "u8g2_font_6x13B_tn":13,
+  "u8g2_font_6x13B_tr":11,
+  "u8g2_font_6x13O_mf":11,
+  "u8g2_font_6x13O_mn":13,
+  "u8g2_font_6x13O_mr":11,
+  "u8g2_font_6x13O_tf":11,
+  "u8g2_font_6x13O_tn":13,
+  "u8g2_font_6x13O_tr":11,
+  "u8g2_font_6x13_me":11,
+  "u8g2_font_6x13_mf":11,
+  "u8g2_font_6x13_mn":13,
+  "u8g2_font_6x13_mr":11,
+  "u8g2_font_6x13_t_cyrillic":11,
+  "u8g2_font_6x13_t_hebrew":11,
+  "u8g2_font_6x13_te":11,
+  "u8g2_font_6x13_tf":11,
+  "u8g2_font_6x13_tn":13,
+  "u8g2_font_6x13_tr":11,
+  "u8g2_font_7Segments_26x42_mn":42,
+  "u8g2_font_7x13B_mf":11,
+  "u8g2_font_7x13B_mn":13,
+  "u8g2_font_7x13B_mr":11,
+  "u8g2_font_7x13B_tf":11,
+  "u8g2_font_7x13B_tn":13,
+  "u8g2_font_7x13B_tr":11,
+  "u8g2_font_7x13O_mf":11,
+  "u8g2_font_7x13O_mn":13,
+  "u8g2_font_7x13O_mr":11,
+  "u8g2_font_7x13O_tf":11,
+  "u8g2_font_7x13O_tn":13,
+  "u8g2_font_7x13O_tr":11,
+  "u8g2_font_7x13_m_symbols":11,
+  "u8g2_font_7x13_me":11,
+  "u8g2_font_7x13_mf":11,
+  "u8g2_font_7x13_mn":13,
+  "u8g2_font_7x13_mr":11,
+  "u8g2_font_7x13_t_cyrillic":11,
+  "u8g2_font_7x13_t_symbols":11,
+  "u8g2_font_7x13_te":11,
+  "u8g2_font_7x13_tf":11,
+  "u8g2_font_7x13_tn":13,
+  "u8g2_font_7x13_tr":11,
+  "u8g2_font_7x14B_mf":12,
+  "u8g2_font_7x14B_mn":14,
+  "u8g2_font_7x14B_mr":12,
+  "u8g2_font_7x14B_tf":12,
+  "u8g2_font_7x14B_tn":14,
+  "u8g2_font_7x14B_tr":12,
+  "u8g2_font_7x14_mf":12,
+  "u8g2_font_7x14_mn":14,
+  "u8g2_font_7x14_mr":12,
+  "u8g2_font_7x14_tf":12,
+  "u8g2_font_7x14_tn":14,
+  "u8g2_font_7x14_tr":12,
+  "u8g2_font_8bitclassic_te":13,
+  "u8g2_font_8bitclassic_tf":13,
+  "u8g2_font_8bitclassic_tr":13,
+  "u8g2_font_8x13B_mf":12,
+  "u8g2_font_8x13B_mn":13,
+  "u8g2_font_8x13B_mr":12,
+  "u8g2_font_8x13B_tf":12,
+  "u8g2_font_8x13B_tn":13,
+  "u8g2_font_8x13B_tr":12,
+  "u8g2_font_8x13O_mf":11,
+  "u8g2_font_8x13O_mn":13,
+  "u8g2_font_8x13O_mr":11,
+  "u8g2_font_8x13O_tf":11,
+  "u8g2_font_8x13O_tn":13,
+  "u8g2_font_8x13O_tr":11,
+  "u8g2_font_8x13_m_symbols":11,
+  "u8g2_font_8x13_me":11,
+  "u8g2_font_8x13_mf":11,
+  "u8g2_font_8x13_mn":13,
+  "u8g2_font_8x13_mr":11,
+  "u8g2_font_8x13_t_cyrillic":11,
+  "u8g2_font_8x13_t_symbols":11,
+  "u8g2_font_8x13_te":11,
+  "u8g2_font_8x13_tf":11,
+  "u8g2_font_8x13_tn":13,
+  "u8g2_font_8x13_tr":11,
+  "u8g2_font_9x15B_mf":13,
+  "u8g2_font_9x15B_mn":15,
+  "u8g2_font_9x15B_mr":13,
+  "u8g2_font_9x15B_tf":13,
+  "u8g2_font_9x15B_tn":15,
+  "u8g2_font_9x15B_tr":13,
+  "u8g2_font_9x15_m_symbols":13,
+  "u8g2_font_9x15_me":13,
+  "u8g2_font_9x15_mf":13,
+  "u8g2_font_9x15_mn":15,
+  "u8g2_font_9x15_mr":13,
+  "u8g2_font_9x15_t_cyrillic":13,
+  "u8g2_font_9x15_t_symbols":13,
+  "u8g2_font_9x15_te":13,
+  "u8g2_font_9x15_tf":13,
+  "u8g2_font_9x15_tn":15,
+  "u8g2_font_9x15_tr":13,
+  "u8g2_font_9x18B_mf":13,
+  "u8g2_font_9x18B_mn":18,
+  "u8g2_font_9x18B_mr":13,
+  "u8g2_font_9x18B_tf":13,
+  "u8g2_font_9x18B_tn":18,
+  "u8g2_font_9x18B_tr":13,
+  "u8g2_font_9x18_mf":13,
+  "u8g2_font_9x18_mn":18,
+  "u8g2_font_9x18_mr":13,
+  "u8g2_font_9x18_tf":13,
+  "u8g2_font_9x18_tn":18,
+  "u8g2_font_9x18_tr":13,
+  "u8g2_font_9x6LED_mn":10,
+  "u8g2_font_9x6LED_tf":10,
+  "u8g2_font_9x6LED_tr":10,
+  "u8g2_font_BBSesque_te":12,
+  "u8g2_font_BBSesque_tf":12,
+  "u8g2_font_BBSesque_tr":12,
+  "u8g2_font_BitTypeWriter_te":9,
+  "u8g2_font_BitTypeWriter_tr":9,
+  "u8g2_font_Born2bSportySlab_t_all":12,
+  "u8g2_font_Born2bSportySlab_te":12,
+  "u8g2_font_Born2bSportySlab_tf":12,
+  "u8g2_font_Born2bSportySlab_tr":12,
+  "u8g2_font_Born2bSportyV2_te":12,
+  "u8g2_font_Born2bSportyV2_tf":12,
+  "u8g2_font_Born2bSportyV2_tr":12,
+  "u8g2_font_CursivePixel_tr":14,
+  "u8g2_font_DigitalDiscoThin_te":13,
+  "u8g2_font_DigitalDiscoThin_tf":13,
+  "u8g2_font_DigitalDiscoThin_tn":13,
+  "u8g2_font_DigitalDiscoThin_tr":13,
+  "u8g2_font_DigitalDiscoThin_tu":13,
+  "u8g2_font_DigitalDisco_te":13,
+  "u8g2_font_DigitalDisco_tf":13,
+  "u8g2_font_DigitalDisco_tn":13,
+  "u8g2_font_DigitalDisco_tr":13,
+  "u8g2_font_DigitalDisco_tu":13,
+  "u8g2_font_Engrish_tf":12,
+  "u8g2_font_Engrish_tr":12,
+  "u8g2_font_Georgia7px_te":9,
+  "u8g2_font_Georgia7px_tf":9,
+  "u8g2_font_Georgia7px_tr":9,
+  "u8g2_font_HelvetiPixelOutline_te":16,
+  "u8g2_font_HelvetiPixelOutline_tr":16,
+  "u8g2_font_HelvetiPixel_tr":10,
+  "u8g2_font_IPAandRUSLCD_te":7,
+  "u8g2_font_IPAandRUSLCD_tf":7,
+  "u8g2_font_IPAandRUSLCD_tr":7,
+  "u8g2_font_ImpactBits_tr":14,
+  "u8g2_font_NokiaLargeBold_te":13,
+  "u8g2_font_NokiaLargeBold_tf":13,
+  "u8g2_font_NokiaLargeBold_tr":13,
+  "u8g2_font_NokiaSmallBold_te":8,
+  "u8g2_font_NokiaSmallBold_tf":8,
+  "u8g2_font_NokiaSmallBold_tr":8,
+  "u8g2_font_NokiaSmallPlain_te":8,
+  "u8g2_font_NokiaSmallPlain_tf":8,
+  "u8g2_font_NokiaSmallPlain_tr":8,
+  "u8g2_font_PixelTheatre_te":8,
+  "u8g2_font_PixelTheatre_tr":8,
+  "u8g2_font_Pixellari_te":14,
+  "u8g2_font_Pixellari_tf":14,
+  "u8g2_font_Pixellari_tn":14,
+  "u8g2_font_Pixellari_tr":14,
+  "u8g2_font_Pixellari_tu":14,
+  "u8g2_font_Terminal_te":11,
+  "u8g2_font_Terminal_tr":11,
+  "u8g2_font_TimesNewPixel_tr":12,
+  "u8g2_font_UnnamedDOSFontIV_tr":16,
+  "u8g2_font_Untitled16PixelSansSerifBitmap_tr":14,
+  "u8g2_font_VCR_OSD_mf":16,
+  "u8g2_font_VCR_OSD_mn":16,
+  "u8g2_font_VCR_OSD_mr":16,
+  "u8g2_font_VCR_OSD_mu":16,
+  "u8g2_font_VCR_OSD_tf":16,
+  "u8g2_font_VCR_OSD_tn":16,
+  "u8g2_font_VCR_OSD_tr":16,
+  "u8g2_font_VCR_OSD_tu":16,
+  "u8g2_font_Wizzard_tr":10,
+  "u8g2_font_abel_mr":11,
+  "u8g2_font_adventurer_t_all":15,
+  "u8g2_font_adventurer_tf":15,
+  "u8g2_font_adventurer_tr":15,
+  "u8g2_font_amstrad_cpc_extended_8f":8,
+  "u8g2_font_amstrad_cpc_extended_8n":8,
+  "u8g2_font_amstrad_cpc_extended_8r":8,
+  "u8g2_font_amstrad_cpc_extended_8u":8,
+  "u8g2_font_artossans8_8n":8,
+  "u8g2_font_artossans8_8r":8,
+  "u8g2_font_artossans8_8u":8,
+  "u8g2_font_artosserif8_8n":8,
+  "u8g2_font_artosserif8_8r":8,
+  "u8g2_font_artosserif8_8u":8,
+  "u8g2_font_astragal_nbp_tf":15,
+  "u8g2_font_astragal_nbp_tn":15,
+  "u8g2_font_astragal_nbp_tr":15,
+  "u8g2_font_b10_b_t_japanese1":7,
+  "u8g2_font_b10_b_t_japanese2":7,
+  "u8g2_font_b10_t_japanese1":7,
+  "u8g2_font_b10_t_japanese2":7,
+  "u8g2_font_b12_b_t_japanese1":9,
+  "u8g2_font_b12_b_t_japanese2":9,
+  "u8g2_font_b12_b_t_japanese3":9,
+  "u8g2_font_b12_t_japanese1":9,
+  "u8g2_font_b12_t_japanese2":9,
+  "u8g2_font_b12_t_japanese3":9,
+  "u8g2_font_b16_b_t_japanese1":12,
+  "u8g2_font_b16_b_t_japanese2":12,
+  "u8g2_font_b16_b_t_japanese3":12,
+  "u8g2_font_b16_t_japanese1":12,
+  "u8g2_font_b16_t_japanese2":12,
+  "u8g2_font_b16_t_japanese3":12,
+  "u8g2_font_baby_tf":7,
+  "u8g2_font_baby_tn":7,
+  "u8g2_font_baby_tr":7,
+  "u8g2_font_balthasar_regular_nbp_tf":12,
+  "u8g2_font_balthasar_regular_nbp_tn":12,
+  "u8g2_font_balthasar_regular_nbp_tr":12,
+  "u8g2_font_balthasar_titling_nbp_tf":19,
+  "u8g2_font_balthasar_titling_nbp_tn":19,
+  "u8g2_font_balthasar_titling_nbp_tr":19,
+  "u8g2_font_battery19_tn":19,
+  "u8g2_font_battery24_tr":24,
+  "u8g2_font_bauhaus2015_tn":14,
+  "u8g2_font_bauhaus2015_tr":14,
+  "u8g2_font_beanstalk_mel_tn":13,
+  "u8g2_font_beanstalk_mel_tr":13,
+  "u8g2_font_bitcasual_t_all":10,
+  "u8g2_font_bitcasual_tf":10,
+  "u8g2_font_bitcasual_tn":10,
+  "u8g2_font_bitcasual_tr":10,
+  "u8g2_font_bitcasual_tu":10,
+  "u8g2_font_blipfest_07_tn":6,
+  "u8g2_font_blipfest_07_tr":6,
+  "u8g2_font_botmaker_te":15,
+  "u8g2_font_boutique_bitmap_7x7_t_all":7,
+  "u8g2_font_boutique_bitmap_7x7_t_chinese1":7,
+  "u8g2_font_boutique_bitmap_7x7_t_chinese2":7,
+  "u8g2_font_boutique_bitmap_7x7_t_chinese3":7,
+  "u8g2_font_boutique_bitmap_7x7_t_gb2312":7,
+  "u8g2_font_boutique_bitmap_7x7_t_gb2312a":7,
+  "u8g2_font_boutique_bitmap_7x7_t_gb2312b":7,
+  "u8g2_font_boutique_bitmap_7x7_te":7,
+  "u8g2_font_boutique_bitmap_7x7_tf":7,
+  "u8g2_font_boutique_bitmap_7x7_tn":7,
+  "u8g2_font_boutique_bitmap_7x7_tr":7,
+  "u8g2_font_boutique_bitmap_9x9_bold_t_all":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_t_chinese1":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_t_chinese2":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_t_chinese3":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_t_gb2312":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_t_gb2312a":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_t_gb2312b":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_te":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_tf":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_tn":9,
+  "u8g2_font_boutique_bitmap_9x9_bold_tr":9,
+  "u8g2_font_boutique_bitmap_9x9_t_all":9,
+  "u8g2_font_boutique_bitmap_9x9_t_chinese1":9,
+  "u8g2_font_boutique_bitmap_9x9_t_chinese2":9,
+  "u8g2_font_boutique_bitmap_9x9_t_chinese3":9,
+  "u8g2_font_boutique_bitmap_9x9_t_gb2312":9,
+  "u8g2_font_boutique_bitmap_9x9_t_gb2312a":9,
+  "u8g2_font_boutique_bitmap_9x9_t_gb2312b":9,
+  "u8g2_font_boutique_bitmap_9x9_te":9,
+  "u8g2_font_boutique_bitmap_9x9_tf":9,
+  "u8g2_font_boutique_bitmap_9x9_tn":9,
+  "u8g2_font_boutique_bitmap_9x9_tr":9,
+  "u8g2_font_bpixel_te":10,
+  "u8g2_font_bpixel_tr":10,
+  "u8g2_font_bpixeldouble_tr":16,
+  "u8g2_font_bracketedbabies_tr":14,
+  "u8g2_font_bubble_tn":24,
+  "u8g2_font_bubble_tr":24,
+  "u8g2_font_busdisplay11x5_te":12,
+  "u8g2_font_busdisplay11x5_tr":12,
+  "u8g2_font_busdisplay8x5_tr":8,
+  "u8g2_font_bytesize_te":15,
+  "u8g2_font_bytesize_tf":15,
+  "u8g2_font_bytesize_tr":15,
+  "u8g2_font_calblk36_tr":30,
+  "u8g2_font_calibration_gothic_nbp_t_all":19,
+  "u8g2_font_calibration_gothic_nbp_tf":19,
+  "u8g2_font_calibration_gothic_nbp_tn":19,
+  "u8g2_font_calibration_gothic_nbp_tr":19,
+  "u8g2_font_callite24_tr":21,
+  "u8g2_font_cardimon_pixel_tf":36,
+  "u8g2_font_cardimon_pixel_tn":36,
+  "u8g2_font_cardimon_pixel_tr":36,
+  "u8g2_font_celibatemonk_tr":15,
+  "u8g2_font_chargen_92_me":16,
+  "u8g2_font_chargen_92_mf":16,
+  "u8g2_font_chargen_92_mn":16,
+  "u8g2_font_chargen_92_mr":16,
+  "u8g2_font_chargen_92_te":16,
+  "u8g2_font_chargen_92_tf":16,
+  "u8g2_font_chargen_92_tn":16,
+  "u8g2_font_chargen_92_tr":16,
+  "u8g2_font_chikita_tf":7,
+  "u8g2_font_chikita_tn":7,
+  "u8g2_font_chikita_tr":7,
+  "u8g2_font_chroma48medium8_8n":7,
+  "u8g2_font_chroma48medium8_8r":7,
+  "u8g2_font_chroma48medium8_8u":7,
+  "u8g2_font_ciircle13_tr":16,
+  "u8g2_font_commodore64_tr":14,
+  "u8g2_font_courB08_tf":8,
+  "u8g2_font_courB08_tn":8,
+  "u8g2_font_courB08_tr":8,
+  "u8g2_font_courB10_tf":12,
+  "u8g2_font_courB10_tn":12,
+  "u8g2_font_courB10_tr":12,
+  "u8g2_font_courB12_tf":13,
+  "u8g2_font_courB12_tn":13,
+  "u8g2_font_courB12_tr":13,
+  "u8g2_font_courB14_tf":15,
+  "u8g2_font_courB14_tn":15,
+  "u8g2_font_courB14_tr":15,
+  "u8g2_font_courB18_tf":20,
+  "u8g2_font_courB18_tn":20,
+  "u8g2_font_courB18_tr":20,
+  "u8g2_font_courB24_tf":27,
+  "u8g2_font_courB24_tn":27,
+  "u8g2_font_courB24_tr":27,
+  "u8g2_font_courR08_tf":8,
+  "u8g2_font_courR08_tn":8,
+  "u8g2_font_courR08_tr":8,
+  "u8g2_font_courR10_tf":12,
+  "u8g2_font_courR10_tn":12,
+  "u8g2_font_courR10_tr":12,
+  "u8g2_font_courR12_tf":13,
+  "u8g2_font_courR12_tn":13,
+  "u8g2_font_courR12_tr":13,
+  "u8g2_font_courR14_tf":15,
+  "u8g2_font_courR14_tn":15,
+  "u8g2_font_courR14_tr":15,
+  "u8g2_font_courR18_tf":19,
+  "u8g2_font_courR18_tn":19,
+  "u8g2_font_courR18_tr":19,
+  "u8g2_font_courR24_tf":25,
+  "u8g2_font_courR24_tn":25,
+  "u8g2_font_courR24_tr":25,
+  "u8g2_font_crox1c_mf":11,
+  "u8g2_font_crox1c_mn":13,
+  "u8g2_font_crox1c_mr":11,
+  "u8g2_font_crox1c_tf":11,
+  "u8g2_font_crox1c_tn":13,
+  "u8g2_font_crox1c_tr":11,
+  "u8g2_font_crox1cb_mf":11,
+  "u8g2_font_crox1cb_mn":13,
+  "u8g2_font_crox1cb_mr":11,
+  "u8g2_font_crox1cb_tf":11,
+  "u8g2_font_crox1cb_tn":13,
+  "u8g2_font_crox1cb_tr":11,
+  "u8g2_font_crox1h_tf":11,
+  "u8g2_font_crox1h_tn":13,
+  "u8g2_font_crox1h_tr":11,
+  "u8g2_font_crox1hb_tf":11,
+  "u8g2_font_crox1hb_tn":13,
+  "u8g2_font_crox1hb_tr":11,
+  "u8g2_font_crox1t_tf":11,
+  "u8g2_font_crox1t_tn":13,
+  "u8g2_font_crox1t_tr":11,
+  "u8g2_font_crox1tb_tf":11,
+  "u8g2_font_crox1tb_tn":13,
+  "u8g2_font_crox1tb_tr":11,
+  "u8g2_font_crox2c_mf":13,
+  "u8g2_font_crox2c_mn":16,
+  "u8g2_font_crox2c_mr":13,
+  "u8g2_font_crox2c_tf":13,
+  "u8g2_font_crox2c_tn":16,
+  "u8g2_font_crox2c_tr":13,
+  "u8g2_font_crox2cb_mf":13,
+  "u8g2_font_crox2cb_mn":16,
+  "u8g2_font_crox2cb_mr":13,
+  "u8g2_font_crox2cb_tf":13,
+  "u8g2_font_crox2cb_tn":16,
+  "u8g2_font_crox2cb_tr":13,
+  "u8g2_font_crox2h_tf":13,
+  "u8g2_font_crox2h_tn":16,
+  "u8g2_font_crox2h_tr":13,
+  "u8g2_font_crox2hb_tf":13,
+  "u8g2_font_crox2hb_tn":16,
+  "u8g2_font_crox2hb_tr":13,
+  "u8g2_font_crox2t_tf":13,
+  "u8g2_font_crox2t_tn":16,
+  "u8g2_font_crox2t_tr":13,
+  "u8g2_font_crox2tb_tf":13,
+  "u8g2_font_crox2tb_tn":16,
+  "u8g2_font_crox2tb_tr":13,
+  "u8g2_font_crox3c_mf":16,
+  "u8g2_font_crox3c_mn":20,
+  "u8g2_font_crox3c_mr":16,
+  "u8g2_font_crox3c_tf":16,
+  "u8g2_font_crox3c_tn":20,
+  "u8g2_font_crox3c_tr":16,
+  "u8g2_font_crox3cb_mf":16,
+  "u8g2_font_crox3cb_mn":20,
+  "u8g2_font_crox3cb_mr":16,
+  "u8g2_font_crox3cb_tf":16,
+  "u8g2_font_crox3cb_tn":20,
+  "u8g2_font_crox3cb_tr":16,
+  "u8g2_font_crox3h_tf":16,
+  "u8g2_font_crox3h_tn":20,
+  "u8g2_font_crox3h_tr":16,
+  "u8g2_font_crox3hb_tf":16,
+  "u8g2_font_crox3hb_tn":20,
+  "u8g2_font_crox3hb_tr":16,
+  "u8g2_font_crox3t_tf":15,
+  "u8g2_font_crox3t_tn":19,
+  "u8g2_font_crox3t_tr":15,
+  "u8g2_font_crox3tb_tf":15,
+  "u8g2_font_crox3tb_tn":19,
+  "u8g2_font_crox3tb_tr":15,
+  "u8g2_font_crox4h_tf":18,
+  "u8g2_font_crox4h_tn":24,
+  "u8g2_font_crox4h_tr":18,
+  "u8g2_font_crox4hb_tf":18,
+  "u8g2_font_crox4hb_tn":24,
+  "u8g2_font_crox4hb_tr":18,
+  "u8g2_font_crox4t_tf":17,
+  "u8g2_font_crox4t_tn":21,
+  "u8g2_font_crox4t_tr":17,
+  "u8g2_font_crox4tb_tf":17,
+  "u8g2_font_crox4tb_tn":21,
+  "u8g2_font_crox4tb_tr":17,
+  "u8g2_font_crox5h_tf":22,
+  "u8g2_font_crox5h_tn":29,
+  "u8g2_font_crox5h_tr":22,
+  "u8g2_font_crox5hb_tf":22,
+  "u8g2_font_crox5hb_tn":29,
+  "u8g2_font_crox5hb_tr":22,
+  "u8g2_font_crox5t_tf":22,
+  "u8g2_font_crox5t_tn":27,
+  "u8g2_font_crox5t_tr":22,
+  "u8g2_font_crox5tb_tf":22,
+  "u8g2_font_crox5tb_tn":27,
+  "u8g2_font_crox5tb_tr":22,
+  "u8g2_font_cu12_h_symbols":15,
+  "u8g2_font_cu12_he":15,
+  "u8g2_font_cu12_hf":15,
+  "u8g2_font_cu12_hn":15,
+  "u8g2_font_cu12_hr":15,
+  "u8g2_font_cu12_me":15,
+  "u8g2_font_cu12_mf":15,
+  "u8g2_font_cu12_mn":15,
+  "u8g2_font_cu12_mr":15,
+  "u8g2_font_cu12_t_arabic":15,
+  "u8g2_font_cu12_t_cyrillic":15,
+  "u8g2_font_cu12_t_greek":15,
+  "u8g2_font_cu12_t_hebrew":15,
+  "u8g2_font_cu12_t_symbols":15,
+  "u8g2_font_cu12_t_tibetan":15,
+  "u8g2_font_cu12_te":15,
+  "u8g2_font_cu12_tf":15,
+  "u8g2_font_cu12_tn":15,
+  "u8g2_font_cu12_tr":15,
+  "u8g2_font_cube_mel_tn":9,
+  "u8g2_font_cube_mel_tr":9,
+  "u8g2_font_cupcakemetoyourleader_tn":16,
+  "u8g2_font_cupcakemetoyourleader_tr":16,
+  "u8g2_font_cupcakemetoyourleader_tu":16,
+  "u8g2_font_cursor_tf":17,
+  "u8g2_font_cursor_tr":17,
+  "u8g2_font_diodesemimono_tr":10,
+  "u8g2_font_disrespectfulteenager_tu":16,
+  "u8g2_font_doomalpha04_te":13,
+  "u8g2_font_doomalpha04_tr":13,
+  "u8g2_font_dystopia_te":14,
+  "u8g2_font_dystopia_tr":14,
+  "u8g2_font_eckpixel_tr":14,
+  "u8g2_font_efraneextracondensed_te":11,
+  "u8g2_font_elispe_tr":16,
+  "u8g2_font_emoticons21_tr":21,
+  "u8g2_font_etl14thai_t":11,
+  "u8g2_font_etl16thai_t":12,
+  "u8g2_font_etl24thai_t":19,
+  "u8g2_font_eventhrees_tr":4,
+  "u8g2_font_fancypixels_tf":11,
+  "u8g2_font_fancypixels_tr":11,
+  "u8g2_font_fewture_tf":13,
+  "u8g2_font_fewture_tn":13,
+  "u8g2_font_fewture_tr":13,
+  "u8g2_font_finderskeepers_tf":9,
+  "u8g2_font_finderskeepers_tn":9,
+  "u8g2_font_finderskeepers_tr":9,
+  "u8g2_font_fivepx_tr":7,
+  "u8g2_font_fourmat_te":5,
+  "u8g2_font_fourmat_tf":5,
+  "u8g2_font_fourmat_tr":5,
+  "u8g2_font_freedoomr10_mu":12,
+  "u8g2_font_freedoomr10_tu":12,
+  "u8g2_font_freedoomr25_mn":26,
+  "u8g2_font_freedoomr25_tn":26,
+  "u8g2_font_frigidaire_mr":11,
+  "u8g2_font_frikativ_t_all":15,
+  "u8g2_font_frikativ_tf":15,
+  "u8g2_font_frikativ_tr":15,
+  "u8g2_font_fub11_t_symbol":14,
+  "u8g2_font_fub11_tf":14,
+  "u8g2_font_fub11_tn":14,
+  "u8g2_font_fub11_tr":14,
+  "u8g2_font_fub14_t_symbol":18,
+  "u8g2_font_fub14_tf":18,
+  "u8g2_font_fub14_tn":18,
+  "u8g2_font_fub14_tr":18,
+  "u8g2_font_fub17_t_symbol":22,
+  "u8g2_font_fub17_tf":22,
+  "u8g2_font_fub17_tn":22,
+  "u8g2_font_fub17_tr":22,
+  "u8g2_font_fub20_t_symbol":25,
+  "u8g2_font_fub20_tf":25,
+  "u8g2_font_fub20_tn":25,
+  "u8g2_font_fub20_tr":25,
+  "u8g2_font_fub25_t_symbol":32,
+  "u8g2_font_fub25_tf":32,
+  "u8g2_font_fub25_tn":32,
+  "u8g2_font_fub25_tr":32,
+  "u8g2_font_fub30_t_symbol":37,
+  "u8g2_font_fub30_tf":37,
+  "u8g2_font_fub30_tn":37,
+  "u8g2_font_fub30_tr":37,
+  "u8g2_font_fub35_t_symbol":44,
+  "u8g2_font_fub35_tf":44,
+  "u8g2_font_fub35_tn":44,
+  "u8g2_font_fub35_tr":44,
+  "u8g2_font_fub42_t_symbol":54,
+  "u8g2_font_fub42_tf":54,
+  "u8g2_font_fub42_tn":54,
+  "u8g2_font_fub42_tr":54,
+  "u8g2_font_fub49_t_symbol":63,
+  "u8g2_font_fub49_tn":63,
+  "u8g2_font_fur11_t_symbol":14,
+  "u8g2_font_fur11_tf":14,
+  "u8g2_font_fur11_tn":14,
+  "u8g2_font_fur11_tr":14,
+  "u8g2_font_fur14_t_symbol":18,
+  "u8g2_font_fur14_tf":18,
+  "u8g2_font_fur14_tn":18,
+  "u8g2_font_fur14_tr":18,
+  "u8g2_font_fur17_t_symbol":22,
+  "u8g2_font_fur17_tf":22,
+  "u8g2_font_fur17_tn":22,
+  "u8g2_font_fur17_tr":22,
+  "u8g2_font_fur20_t_symbol":25,
+  "u8g2_font_fur20_tf":25,
+  "u8g2_font_fur20_tn":25,
+  "u8g2_font_fur20_tr":25,
+  "u8g2_font_fur25_t_symbol":32,
+  "u8g2_font_fur25_tf":32,
+  "u8g2_font_fur25_tn":32,
+  "u8g2_font_fur25_tr":32,
+  "u8g2_font_fur30_t_symbol":38,
+  "u8g2_font_fur30_tf":38,
+  "u8g2_font_fur30_tn":38,
+  "u8g2_font_fur30_tr":38,
+  "u8g2_font_fur35_t_symbol":44,
+  "u8g2_font_fur35_tf":44,
+  "u8g2_font_fur35_tn":44,
+  "u8g2_font_fur35_tr":44,
+  "u8g2_font_fur42_t_symbol":54,
+  "u8g2_font_fur42_tf":54,
+  "u8g2_font_fur42_tn":54,
+  "u8g2_font_fur42_tr":54,
+  "u8g2_font_fur49_t_symbol":63,
+  "u8g2_font_fur49_tn":63,
+  "u8g2_font_garbagecan_tf":16,
+  "u8g2_font_garbagecan_tr":16,
+  "u8g2_font_gb16st_t_1":13,
+  "u8g2_font_gb16st_t_2":13,
+  "u8g2_font_gb16st_t_3":13,
+  "u8g2_font_gb24st_t_1":17,
+  "u8g2_font_gb24st_t_2":17,
+  "u8g2_font_gb24st_t_3":17,
+  "u8g2_font_glasstown_nbp_t_all":10,
+  "u8g2_font_glasstown_nbp_tf":10,
+  "u8g2_font_glasstown_nbp_tn":10,
+  "u8g2_font_glasstown_nbp_tr":10,
+  "u8g2_font_greenbloodserif2_tr":16,
+  "u8g2_font_guildenstern_nbp_t_all":10,
+  "u8g2_font_guildenstern_nbp_tf":10,
+  "u8g2_font_guildenstern_nbp_tn":10,
+  "u8g2_font_guildenstern_nbp_tr":10,
+  "u8g2_font_gulim11_t_korean1":10,
+  "u8g2_font_gulim11_t_korean2":10,
+  "u8g2_font_gulim12_t_korean1":12,
+  "u8g2_font_gulim12_t_korean2":12,
+  "u8g2_font_gulim14_t_korean1":12,
+  "u8g2_font_gulim14_t_korean2":12,
+  "u8g2_font_gulim16_t_korean1":14,
+  "u8g2_font_gulim16_t_korean2":14,
+  "u8g2_font_habsburgchancery_t_all":14,
+  "u8g2_font_habsburgchancery_tf":14,
+  "u8g2_font_habsburgchancery_tn":14,
+  "u8g2_font_habsburgchancery_tr":14,
+  "u8g2_font_halftone_tf":13,
+  "u8g2_font_halftone_tn":13,
+  "u8g2_font_halftone_tr":13,
+  "u8g2_font_haxrcorp4089_t_cyrillic":9,
+  "u8g2_font_haxrcorp4089_tn":9,
+  "u8g2_font_haxrcorp4089_tr":9,
+  "u8g2_font_heavybottom_tr":16,
+  "u8g2_font_heisans_tr":8,
+  "u8g2_font_helvB08_te":10,
+  "u8g2_font_helvB08_tf":10,
+  "u8g2_font_helvB08_tn":10,
+  "u8g2_font_helvB08_tr":10,
+  "u8g2_font_helvB10_te":14,
+  "u8g2_font_helvB10_tf":14,
+  "u8g2_font_helvB10_tn":14,
+  "u8g2_font_helvB10_tr":14,
+  "u8g2_font_helvB12_te":16,
+  "u8g2_font_helvB12_tf":16,
+  "u8g2_font_helvB12_tn":16,
+  "u8g2_font_helvB12_tr":16,
+  "u8g2_font_helvB14_te":18,
+  "u8g2_font_helvB14_tf":18,
+  "u8g2_font_helvB14_tn":18,
+  "u8g2_font_helvB14_tr":18,
+  "u8g2_font_helvB18_te":24,
+  "u8g2_font_helvB18_tf":24,
+  "u8g2_font_helvB18_tn":24,
+  "u8g2_font_helvB18_tr":24,
+  "u8g2_font_helvB24_te":32,
+  "u8g2_font_helvB24_tf":32,
+  "u8g2_font_helvB24_tn":32,
+  "u8g2_font_helvB24_tr":32,
+  "u8g2_font_helvR08_te":10,
+  "u8g2_font_helvR08_tf":10,
+  "u8g2_font_helvR08_tn":10,
+  "u8g2_font_helvR08_tr":10,
+  "u8g2_font_helvR10_te":14,
+  "u8g2_font_helvR10_tf":14,
+  "u8g2_font_helvR10_tn":14,
+  "u8g2_font_helvR10_tr":14,
+  "u8g2_font_helvR12_te":16,
+  "u8g2_font_helvR12_tf":16,
+  "u8g2_font_helvR12_tn":16,
+  "u8g2_font_helvR12_tr":16,
+  "u8g2_font_helvR14_te":18,
+  "u8g2_font_helvR14_tf":18,
+  "u8g2_font_helvR14_tn":18,
+  "u8g2_font_helvR14_tr":18,
+  "u8g2_font_helvR18_te":24,
+  "u8g2_font_helvR18_tf":24,
+  "u8g2_font_helvR18_tn":24,
+  "u8g2_font_helvR18_tr":24,
+  "u8g2_font_helvR24_te":32,
+  "u8g2_font_helvR24_tf":32,
+  "u8g2_font_helvR24_tn":32,
+  "u8g2_font_helvR24_tr":32,
+  "u8g2_font_iconquadpix_m_all":12,
+  "u8g2_font_inb16_mf":20,
+  "u8g2_font_inb16_mn":20,
+  "u8g2_font_inb16_mr":20,
+  "u8g2_font_inb19_mf":24,
+  "u8g2_font_inb19_mn":24,
+  "u8g2_font_inb19_mr":24,
+  "u8g2_font_inb21_mf":27,
+  "u8g2_font_inb21_mn":27,
+  "u8g2_font_inb21_mr":27,
+  "u8g2_font_inb24_mf":30,
+  "u8g2_font_inb24_mn":30,
+  "u8g2_font_inb24_mr":30,
+  "u8g2_font_inb27_mf":34,
+  "u8g2_font_inb27_mn":34,
+  "u8g2_font_inb27_mr":34,
+  "u8g2_font_inb30_mf":38,
+  "u8g2_font_inb30_mn":38,
+  "u8g2_font_inb30_mr":38,
+  "u8g2_font_inb33_mf":42,
+  "u8g2_font_inb33_mn":42,
+  "u8g2_font_inb33_mr":42,
+  "u8g2_font_inb38_mf":47,
+  "u8g2_font_inb38_mn":47,
+  "u8g2_font_inb38_mr":47,
+  "u8g2_font_inb42_mf":53,
+  "u8g2_font_inb42_mn":53,
+  "u8g2_font_inb42_mr":53,
+  "u8g2_font_inb46_mf":58,
+  "u8g2_font_inb46_mn":58,
+  "u8g2_font_inb46_mr":58,
+  "u8g2_font_inb49_mf":63,
+  "u8g2_font_inb49_mn":63,
+  "u8g2_font_inb49_mr":63,
+  "u8g2_font_inb53_mf":68,
+  "u8g2_font_inb53_mn":68,
+  "u8g2_font_inb53_mr":68,
+  "u8g2_font_inb57_mn":73,
+  "u8g2_font_inb63_mn":80,
+  "u8g2_font_inr16_mf":20,
+  "u8g2_font_inr16_mn":20,
+  "u8g2_font_inr16_mr":20,
+  "u8g2_font_inr19_mf":24,
+  "u8g2_font_inr19_mn":24,
+  "u8g2_font_inr19_mr":24,
+  "u8g2_font_inr21_mf":28,
+  "u8g2_font_inr21_mn":28,
+  "u8g2_font_inr21_mr":28,
+  "u8g2_font_inr24_mf":31,
+  "u8g2_font_inr24_mn":31,
+  "u8g2_font_inr24_mr":31,
+  "u8g2_font_inr24_t_cyrillic":31,
+  "u8g2_font_inr27_mf":34,
+  "u8g2_font_inr27_mn":34,
+  "u8g2_font_inr27_mr":34,
+  "u8g2_font_inr27_t_cyrillic":34,
+  "u8g2_font_inr30_mf":38,
+  "u8g2_font_inr30_mn":38,
+  "u8g2_font_inr30_mr":38,
+  "u8g2_font_inr30_t_cyrillic":38,
+  "u8g2_font_inr33_mf":42,
+  "u8g2_font_inr33_mn":42,
+  "u8g2_font_inr33_mr":42,
+  "u8g2_font_inr33_t_cyrillic":42,
+  "u8g2_font_inr38_mf":48,
+  "u8g2_font_inr38_mn":48,
+  "u8g2_font_inr38_mr":48,
+  "u8g2_font_inr38_t_cyrillic":48,
+  "u8g2_font_inr42_mf":53,
+  "u8g2_font_inr42_mn":53,
+  "u8g2_font_inr42_mr":53,
+  "u8g2_font_inr42_t_cyrillic":53,
+  "u8g2_font_inr46_mf":57,
+  "u8g2_font_inr46_mn":57,
+  "u8g2_font_inr46_mr":57,
+  "u8g2_font_inr46_t_cyrillic":57,
+  "u8g2_font_inr49_mf":63,
+  "u8g2_font_inr49_mn":63,
+  "u8g2_font_inr49_mr":63,
+  "u8g2_font_inr49_t_cyrillic":63,
+  "u8g2_font_inr53_mf":68,
+  "u8g2_font_inr53_mn":68,
+  "u8g2_font_inr53_mr":68,
+  "u8g2_font_inr53_t_cyrillic":68,
+  "u8g2_font_inr57_mn":73,
+  "u8g2_font_inr62_mn":78,
+  "u8g2_font_iranian_sans_10_t_all":7,
+  "u8g2_font_iranian_sans_12_t_all":9,
+  "u8g2_font_iranian_sans_14_t_all":10,
+  "u8g2_font_iranian_sans_16_t_all":12,
+  "u8g2_font_iranian_sans_8_t_all":6,
+  "u8g2_font_jinxedwizards_tr":14,
+  "u8g2_font_kibibyte_te":7,
+  "u8g2_font_kibibyte_tr":7,
+  "u8g2_font_koleeko_tf":12,
+  "u8g2_font_koleeko_tn":12,
+  "u8g2_font_koleeko_tr":12,
+  "u8g2_font_koleeko_tu":12,
+  "u8g2_font_lastapprenticebold_te":16,
+  "u8g2_font_lastapprenticebold_tr":16,
+  "u8g2_font_lastapprenticethin_te":16,
+  "u8g2_font_lastapprenticethin_tr":16,
+  "u8g2_font_lastpriestess_tr":12,
+  "u8g2_font_lastpriestess_tu":12,
+  "u8g2_font_likeminecraft_te":9,
+  "u8g2_font_littlemissloudonbold_te":11,
+  "u8g2_font_littlemissloudonbold_tr":11,
+  "u8g2_font_logisoso16_tf":20,
+  "u8g2_font_logisoso16_tn":20,
+  "u8g2_font_logisoso16_tr":20,
+  "u8g2_font_logisoso18_tf":23,
+  "u8g2_font_logisoso18_tn":23,
+  "u8g2_font_logisoso18_tr":23,
+  "u8g2_font_logisoso20_tf":26,
+  "u8g2_font_logisoso20_tn":26,
+  "u8g2_font_logisoso20_tr":26,
+  "u8g2_font_logisoso22_tf":28,
+  "u8g2_font_logisoso22_tn":28,
+  "u8g2_font_logisoso22_tr":28,
+  "u8g2_font_logisoso24_tf":30,
+  "u8g2_font_logisoso24_tn":30,
+  "u8g2_font_logisoso24_tr":30,
+  "u8g2_font_logisoso26_tf":33,
+  "u8g2_font_logisoso26_tn":33,
+  "u8g2_font_logisoso26_tr":33,
+  "u8g2_font_logisoso28_tf":35,
+  "u8g2_font_logisoso28_tn":35,
+  "u8g2_font_logisoso28_tr":35,
+  "u8g2_font_logisoso30_tf":38,
+  "u8g2_font_logisoso30_tn":38,
+  "u8g2_font_logisoso30_tr":38,
+  "u8g2_font_logisoso32_tf":40,
+  "u8g2_font_logisoso32_tn":40,
+  "u8g2_font_logisoso32_tr":40,
+  "u8g2_font_logisoso34_tf":43,
+  "u8g2_font_logisoso34_tn":43,
+  "u8g2_font_logisoso34_tr":43,
+  "u8g2_font_logisoso38_tf":48,
+  "u8g2_font_logisoso38_tn":48,
+  "u8g2_font_logisoso38_tr":48,
+  "u8g2_font_logisoso42_tf":53,
+  "u8g2_font_logisoso42_tn":53,
+  "u8g2_font_logisoso42_tr":53,
+  "u8g2_font_logisoso46_tf":58,
+  "u8g2_font_logisoso46_tn":58,
+  "u8g2_font_logisoso46_tr":58,
+  "u8g2_font_logisoso50_tf":63,
+  "u8g2_font_logisoso50_tn":63,
+  "u8g2_font_logisoso50_tr":63,
+  "u8g2_font_logisoso54_tf":68,
+  "u8g2_font_logisoso54_tn":68,
+  "u8g2_font_logisoso54_tr":68,
+  "u8g2_font_logisoso58_tf":73,
+  "u8g2_font_logisoso58_tn":73,
+  "u8g2_font_logisoso58_tr":73,
+  "u8g2_font_logisoso62_tn":78,
+  "u8g2_font_logisoso78_tn":98,
+  "u8g2_font_logisoso92_tn":115,
+  "u8g2_font_lord_mr":10,
+  "u8g2_font_luBIS08_te":10,
+  "u8g2_font_luBIS08_tf":10,
+  "u8g2_font_luBIS08_tn":10,
+  "u8g2_font_luBIS08_tr":10,
+  "u8g2_font_luBIS10_te":13,
+  "u8g2_font_luBIS10_tf":13,
+  "u8g2_font_luBIS10_tn":13,
+  "u8g2_font_luBIS10_tr":13,
+  "u8g2_font_luBIS12_te":15,
+  "u8g2_font_luBIS12_tf":15,
+  "u8g2_font_luBIS12_tn":15,
+  "u8g2_font_luBIS12_tr":15,
+  "u8g2_font_luBIS14_te":18,
+  "u8g2_font_luBIS14_tf":18,
+  "u8g2_font_luBIS14_tn":18,
+  "u8g2_font_luBIS14_tr":18,
+  "u8g2_font_luBIS18_te":23,
+  "u8g2_font_luBIS18_tf":23,
+  "u8g2_font_luBIS18_tn":23,
+  "u8g2_font_luBIS18_tr":23,
+  "u8g2_font_luBIS19_te":24,
+  "u8g2_font_luBIS19_tf":24,
+  "u8g2_font_luBIS19_tn":24,
+  "u8g2_font_luBIS19_tr":24,
+  "u8g2_font_luBIS24_te":32,
+  "u8g2_font_luBIS24_tf":32,
+  "u8g2_font_luBIS24_tn":32,
+  "u8g2_font_luBIS24_tr":32,
+  "u8g2_font_luBS08_te":10,
+  "u8g2_font_luBS08_tf":10,
+  "u8g2_font_luBS08_tn":10,
+  "u8g2_font_luBS08_tr":10,
+  "u8g2_font_luBS10_te":13,
+  "u8g2_font_luBS10_tf":13,
+  "u8g2_font_luBS10_tn":13,
+  "u8g2_font_luBS10_tr":13,
+  "u8g2_font_luBS12_te":15,
+  "u8g2_font_luBS12_tf":15,
+  "u8g2_font_luBS12_tn":15,
+  "u8g2_font_luBS12_tr":15,
+  "u8g2_font_luBS14_te":18,
+  "u8g2_font_luBS14_tf":18,
+  "u8g2_font_luBS14_tn":18,
+  "u8g2_font_luBS14_tr":18,
+  "u8g2_font_luBS18_te":23,
+  "u8g2_font_luBS18_tf":23,
+  "u8g2_font_luBS18_tn":23,
+  "u8g2_font_luBS18_tr":23,
+  "u8g2_font_luBS19_te":24,
+  "u8g2_font_luBS19_tf":24,
+  "u8g2_font_luBS19_tn":24,
+  "u8g2_font_luBS19_tr":24,
+  "u8g2_font_luBS24_te":32,
+  "u8g2_font_luBS24_tf":32,
+  "u8g2_font_luBS24_tn":32,
+  "u8g2_font_luBS24_tr":32,
+  "u8g2_font_luIS08_te":10,
+  "u8g2_font_luIS08_tf":10,
+  "u8g2_font_luIS08_tn":10,
+  "u8g2_font_luIS08_tr":10,
+  "u8g2_font_luIS10_te":13,
+  "u8g2_font_luIS10_tf":13,
+  "u8g2_font_luIS10_tn":13,
+  "u8g2_font_luIS10_tr":13,
+  "u8g2_font_luIS12_te":15,
+  "u8g2_font_luIS12_tf":15,
+  "u8g2_font_luIS12_tn":15,
+  "u8g2_font_luIS12_tr":15,
+  "u8g2_font_luIS14_te":18,
+  "u8g2_font_luIS14_tf":18,
+  "u8g2_font_luIS14_tn":18,
+  "u8g2_font_luIS14_tr":18,
+  "u8g2_font_luIS18_te":23,
+  "u8g2_font_luIS18_tf":23,
+  "u8g2_font_luIS18_tn":23,
+  "u8g2_font_luIS18_tr":23,
+  "u8g2_font_luIS19_te":24,
+  "u8g2_font_luIS19_tf":24,
+  "u8g2_font_luIS19_tn":24,
+  "u8g2_font_luIS19_tr":24,
+  "u8g2_font_luIS24_te":32,
+  "u8g2_font_luIS24_tf":32,
+  "u8g2_font_luIS24_tn":32,
+  "u8g2_font_luIS24_tr":32,
+  "u8g2_font_luRS08_te":10,
+  "u8g2_font_luRS08_tf":10,
+  "u8g2_font_luRS08_tn":10,
+  "u8g2_font_luRS08_tr":10,
+  "u8g2_font_luRS10_te":13,
+  "u8g2_font_luRS10_tf":13,
+  "u8g2_font_luRS10_tn":13,
+  "u8g2_font_luRS10_tr":13,
+  "u8g2_font_luRS12_te":15,
+  "u8g2_font_luRS12_tf":15,
+  "u8g2_font_luRS12_tn":15,
+  "u8g2_font_luRS12_tr":15,
+  "u8g2_font_luRS14_te":18,
+  "u8g2_font_luRS14_tf":18,
+  "u8g2_font_luRS14_tn":18,
+  "u8g2_font_luRS14_tr":18,
+  "u8g2_font_luRS18_te":23,
+  "u8g2_font_luRS18_tf":23,
+  "u8g2_font_luRS18_tn":23,
+  "u8g2_font_luRS18_tr":23,
+  "u8g2_font_luRS19_te":24,
+  "u8g2_font_luRS19_tf":24,
+  "u8g2_font_luRS19_tn":24,
+  "u8g2_font_luRS19_tr":24,
+  "u8g2_font_luRS24_te":32,
+  "u8g2_font_luRS24_tf":32,
+  "u8g2_font_luRS24_tn":32,
+  "u8g2_font_luRS24_tr":32,
+  "u8g2_font_lubB08_te":11,
+  "u8g2_font_lubB08_tf":11,
+  "u8g2_font_lubB08_tn":11,
+  "u8g2_font_lubB08_tr":11,
+  "u8g2_font_lubB10_te":13,
+  "u8g2_font_lubB10_tf":13,
+  "u8g2_font_lubB10_tn":13,
+  "u8g2_font_lubB10_tr":13,
+  "u8g2_font_lubB12_te":16,
+  "u8g2_font_lubB12_tf":16,
+  "u8g2_font_lubB12_tn":16,
+  "u8g2_font_lubB12_tr":16,
+  "u8g2_font_lubB14_te":19,
+  "u8g2_font_lubB14_tf":19,
+  "u8g2_font_lubB14_tn":19,
+  "u8g2_font_lubB14_tr":19,
+  "u8g2_font_lubB18_te":23,
+  "u8g2_font_lubB18_tf":23,
+  "u8g2_font_lubB18_tn":23,
+  "u8g2_font_lubB18_tr":23,
+  "u8g2_font_lubB19_te":24,
+  "u8g2_font_lubB19_tf":24,
+  "u8g2_font_lubB19_tn":24,
+  "u8g2_font_lubB19_tr":24,
+  "u8g2_font_lubB24_te":32,
+  "u8g2_font_lubB24_tf":32,
+  "u8g2_font_lubB24_tn":32,
+  "u8g2_font_lubB24_tr":32,
+  "u8g2_font_lubBI08_te":11,
+  "u8g2_font_lubBI08_tf":11,
+  "u8g2_font_lubBI08_tn":11,
+  "u8g2_font_lubBI08_tr":11,
+  "u8g2_font_lubBI10_te":13,
+  "u8g2_font_lubBI10_tf":13,
+  "u8g2_font_lubBI10_tn":13,
+  "u8g2_font_lubBI10_tr":13,
+  "u8g2_font_lubBI12_te":16,
+  "u8g2_font_lubBI12_tf":16,
+  "u8g2_font_lubBI12_tn":16,
+  "u8g2_font_lubBI12_tr":16,
+  "u8g2_font_lubBI14_te":19,
+  "u8g2_font_lubBI14_tf":19,
+  "u8g2_font_lubBI14_tn":19,
+  "u8g2_font_lubBI14_tr":19,
+  "u8g2_font_lubBI18_te":23,
+  "u8g2_font_lubBI18_tf":23,
+  "u8g2_font_lubBI18_tn":23,
+  "u8g2_font_lubBI18_tr":23,
+  "u8g2_font_lubBI19_te":24,
+  "u8g2_font_lubBI19_tf":24,
+  "u8g2_font_lubBI19_tn":24,
+  "u8g2_font_lubBI19_tr":24,
+  "u8g2_font_lubBI24_te":32,
+  "u8g2_font_lubBI24_tf":32,
+  "u8g2_font_lubBI24_tn":32,
+  "u8g2_font_lubBI24_tr":32,
+  "u8g2_font_lubI08_te":11,
+  "u8g2_font_lubI08_tf":11,
+  "u8g2_font_lubI08_tn":11,
+  "u8g2_font_lubI08_tr":11,
+  "u8g2_font_lubI10_te":13,
+  "u8g2_font_lubI10_tf":13,
+  "u8g2_font_lubI10_tn":13,
+  "u8g2_font_lubI10_tr":13,
+  "u8g2_font_lubI12_te":16,
+  "u8g2_font_lubI12_tf":16,
+  "u8g2_font_lubI12_tn":16,
+  "u8g2_font_lubI12_tr":16,
+  "u8g2_font_lubI14_te":19,
+  "u8g2_font_lubI14_tf":19,
+  "u8g2_font_lubI14_tn":19,
+  "u8g2_font_lubI14_tr":19,
+  "u8g2_font_lubI18_te":23,
+  "u8g2_font_lubI18_tf":23,
+  "u8g2_font_lubI18_tn":23,
+  "u8g2_font_lubI18_tr":23,
+  "u8g2_font_lubI19_te":24,
+  "u8g2_font_lubI19_tf":24,
+  "u8g2_font_lubI19_tn":24,
+  "u8g2_font_lubI19_tr":24,
+  "u8g2_font_lubI24_te":32,
+  "u8g2_font_lubI24_tf":32,
+  "u8g2_font_lubI24_tn":32,
+  "u8g2_font_lubI24_tr":32,
+  "u8g2_font_lubR08_te":11,
+  "u8g2_font_lubR08_tf":11,
+  "u8g2_font_lubR08_tn":11,
+  "u8g2_font_lubR08_tr":11,
+  "u8g2_font_lubR10_te":13,
+  "u8g2_font_lubR10_tf":13,
+  "u8g2_font_lubR10_tn":13,
+  "u8g2_font_lubR10_tr":13,
+  "u8g2_font_lubR12_te":16,
+  "u8g2_font_lubR12_tf":16,
+  "u8g2_font_lubR12_tn":16,
+  "u8g2_font_lubR12_tr":16,
+  "u8g2_font_lubR14_te":19,
+  "u8g2_font_lubR14_tf":19,
+  "u8g2_font_lubR14_tn":19,
+  "u8g2_font_lubR14_tr":19,
+  "u8g2_font_lubR18_te":23,
+  "u8g2_font_lubR18_tf":23,
+  "u8g2_font_lubR18_tn":23,
+  "u8g2_font_lubR18_tr":23,
+  "u8g2_font_lubR19_te":24,
+  "u8g2_font_lubR19_tf":24,
+  "u8g2_font_lubR19_tn":24,
+  "u8g2_font_lubR19_tr":24,
+  "u8g2_font_lubR24_te":32,
+  "u8g2_font_lubR24_tf":32,
+  "u8g2_font_lubR24_tn":32,
+  "u8g2_font_lubR24_tr":32,
+  "u8g2_font_lucasarts_scumm_subtitle_o_tf":16,
+  "u8g2_font_lucasarts_scumm_subtitle_o_tn":16,
+  "u8g2_font_lucasarts_scumm_subtitle_o_tr":16,
+  "u8g2_font_lucasarts_scumm_subtitle_r_tf":14,
+  "u8g2_font_lucasarts_scumm_subtitle_r_tn":14,
+  "u8g2_font_lucasarts_scumm_subtitle_r_tr":14,
+  "u8g2_font_lucasfont_alternate_tf":8,
+  "u8g2_font_lucasfont_alternate_tn":8,
+  "u8g2_font_lucasfont_alternate_tr":8,
+  "u8g2_font_m2icon_5_tf":6,
+  "u8g2_font_m2icon_7_tf":8,
+  "u8g2_font_m2icon_9_tf":10,
+  "u8g2_font_m_c_kids_nes_credits_font_tr":22,
+  "u8g2_font_mademoiselle_mel_tn":14,
+  "u8g2_font_mademoiselle_mel_tr":14,
+  "u8g2_font_maniac_te":31,
+  "u8g2_font_maniac_tf":31,
+  "u8g2_font_maniac_tn":31,
+  "u8g2_font_maniac_tr":31,
+  "u8g2_font_medsans_tr":11,
+  "u8g2_font_mercutio_basic_nbp_t_all":13,
+  "u8g2_font_mercutio_basic_nbp_tf":13,
+  "u8g2_font_mercutio_basic_nbp_tn":13,
+  "u8g2_font_mercutio_basic_nbp_tr":13,
+  "u8g2_font_mercutio_sc_nbp_t_all":10,
+  "u8g2_font_mercutio_sc_nbp_tf":10,
+  "u8g2_font_mercutio_sc_nbp_tn":10,
+  "u8g2_font_mercutio_sc_nbp_tr":10,
+  "u8g2_font_michaelmouse_tu":13,
+  "u8g2_font_micro_mn":5,
+  "u8g2_font_micro_mr":5,
+  "u8g2_font_micro_tn":5,
+  "u8g2_font_micro_tr":5,
+  "u8g2_font_micropixel_te":7,
+  "u8g2_font_micropixel_tf":7,
+  "u8g2_font_micropixel_tr":7,
+  "u8g2_font_mildras_te":13,
+  "u8g2_font_mildras_tr":13,
+  "u8g2_font_minicute_te":10,
+  "u8g2_font_minicute_tr":10,
+  "u8g2_font_minimal3x3_tu":3,
+  "u8g2_font_minuteconsole_mr":9,
+  "u8g2_font_minuteconsole_tr":9,
+  "u8g2_font_miranda_nbp_tf":12,
+  "u8g2_font_miranda_nbp_tn":12,
+  "u8g2_font_miranda_nbp_tr":12,
+  "u8g2_font_missingplanet_t_all":13,
+  "u8g2_font_missingplanet_tf":13,
+  "u8g2_font_missingplanet_tn":13,
+  "u8g2_font_missingplanet_tr":13,
+  "u8g2_font_moosenooks_tr":16,
+  "u8g2_font_mozart_nbp_h_all":7,
+  "u8g2_font_mozart_nbp_t_all":7,
+  "u8g2_font_mozart_nbp_tf":7,
+  "u8g2_font_mozart_nbp_tn":7,
+  "u8g2_font_mozart_nbp_tr":7,
+  "u8g2_font_mystery_quest_24_tf":27,
+  "u8g2_font_mystery_quest_24_tn":27,
+  "u8g2_font_mystery_quest_24_tr":27,
+  "u8g2_font_mystery_quest_28_tf":31,
+  "u8g2_font_mystery_quest_28_tn":31,
+  "u8g2_font_mystery_quest_28_tr":31,
+  "u8g2_font_mystery_quest_32_tn":37,
+  "u8g2_font_mystery_quest_32_tr":37,
+  "u8g2_font_mystery_quest_36_tn":43,
+  "u8g2_font_mystery_quest_42_tn":49,
+  "u8g2_font_mystery_quest_48_tn":55,
+  "u8g2_font_mystery_quest_56_tn":66,
+  "u8g2_font_ncenB08_te":10,
+  "u8g2_font_ncenB08_tf":10,
+  "u8g2_font_ncenB08_tn":10,
+  "u8g2_font_ncenB08_tr":10,
+  "u8g2_font_ncenB10_te":14,
+  "u8g2_font_ncenB10_tf":14,
+  "u8g2_font_ncenB10_tn":14,
+  "u8g2_font_ncenB10_tr":14,
+  "u8g2_font_ncenB12_te":15,
+  "u8g2_font_ncenB12_tf":15,
+  "u8g2_font_ncenB12_tn":15,
+  "u8g2_font_ncenB12_tr":15,
+  "u8g2_font_ncenB14_te":18,
+  "u8g2_font_ncenB14_tf":18,
+  "u8g2_font_ncenB14_tn":18,
+  "u8g2_font_ncenB14_tr":18,
+  "u8g2_font_ncenB18_te":23,
+  "u8g2_font_ncenB18_tf":23,
+  "u8g2_font_ncenB18_tn":23,
+  "u8g2_font_ncenB18_tr":23,
+  "u8g2_font_ncenB24_te":32,
+  "u8g2_font_ncenB24_tf":32,
+  "u8g2_font_ncenB24_tn":32,
+  "u8g2_font_ncenB24_tr":32,
+  "u8g2_font_ncenR08_te":10,
+  "u8g2_font_ncenR08_tf":10,
+  "u8g2_font_ncenR08_tn":10,
+  "u8g2_font_ncenR08_tr":10,
+  "u8g2_font_ncenR10_te":14,
+  "u8g2_font_ncenR10_tf":14,
+  "u8g2_font_ncenR10_tn":14,
+  "u8g2_font_ncenR10_tr":14,
+  "u8g2_font_ncenR12_te":15,
+  "u8g2_font_ncenR12_tf":15,
+  "u8g2_font_ncenR12_tn":15,
+  "u8g2_font_ncenR12_tr":15,
+  "u8g2_font_ncenR14_te":18,
+  "u8g2_font_ncenR14_tf":18,
+  "u8g2_font_ncenR14_tn":18,
+  "u8g2_font_ncenR14_tr":18,
+  "u8g2_font_ncenR18_te":23,
+  "u8g2_font_ncenR18_tf":23,
+  "u8g2_font_ncenR18_tn":23,
+  "u8g2_font_ncenR18_tr":23,
+  "u8g2_font_ncenR24_te":32,
+  "u8g2_font_ncenR24_tf":32,
+  "u8g2_font_ncenR24_tn":32,
+  "u8g2_font_ncenR24_tr":32,
+  "u8g2_font_nerhoe_tf":10,
+  "u8g2_font_nerhoe_tn":10,
+  "u8g2_font_nerhoe_tr":10,
+  "u8g2_font_neuecraft_te":13,
+  "u8g2_font_neuecraft_tr":13,
+  "u8g2_font_new3x9pixelfont_te":9,
+  "u8g2_font_new3x9pixelfont_tf":9,
+  "u8g2_font_new3x9pixelfont_tr":9,
+  "u8g2_font_nine_by_five_nbp_t_all":11,
+  "u8g2_font_nine_by_five_nbp_tf":11,
+  "u8g2_font_nine_by_five_nbp_tn":11,
+  "u8g2_font_nine_by_five_nbp_tr":11,
+  "u8g2_font_nokiafc22_tf":8,
+  "u8g2_font_nokiafc22_tn":8,
+  "u8g2_font_nokiafc22_tr":8,
+  "u8g2_font_nokiafc22_tu":8,
+  "u8g2_font_oldwizard_tf":13,
+  "u8g2_font_oldwizard_tn":13,
+  "u8g2_font_oldwizard_tr":13,
+  "u8g2_font_oldwizard_tu":13,
+  "u8g2_font_open_iconic_all_1x_t":8,
+  "u8g2_font_open_iconic_all_2x_t":16,
+  "u8g2_font_open_iconic_all_4x_t":32,
+  "u8g2_font_open_iconic_all_6x_t":48,
+  "u8g2_font_open_iconic_all_8x_t":64,
+  "u8g2_font_open_iconic_app_1x_t":8,
+  "u8g2_font_open_iconic_app_2x_t":16,
+  "u8g2_font_open_iconic_app_4x_t":32,
+  "u8g2_font_open_iconic_app_6x_t":48,
+  "u8g2_font_open_iconic_app_8x_t":64,
+  "u8g2_font_open_iconic_arrow_1x_t":7,
+  "u8g2_font_open_iconic_arrow_2x_t":14,
+  "u8g2_font_open_iconic_arrow_4x_t":28,
+  "u8g2_font_open_iconic_arrow_6x_t":42,
+  "u8g2_font_open_iconic_arrow_8x_t":56,
+  "u8g2_font_open_iconic_check_1x_t":8,
+  "u8g2_font_open_iconic_check_2x_t":16,
+  "u8g2_font_open_iconic_check_4x_t":32,
+  "u8g2_font_open_iconic_check_6x_t":48,
+  "u8g2_font_open_iconic_check_8x_t":64,
+  "u8g2_font_open_iconic_email_1x_t":8,
+  "u8g2_font_open_iconic_email_2x_t":16,
+  "u8g2_font_open_iconic_email_4x_t":32,
+  "u8g2_font_open_iconic_email_6x_t":48,
+  "u8g2_font_open_iconic_email_8x_t":64,
+  "u8g2_font_open_iconic_embedded_1x_t":8,
+  "u8g2_font_open_iconic_embedded_2x_t":16,
+  "u8g2_font_open_iconic_embedded_4x_t":32,
+  "u8g2_font_open_iconic_embedded_6x_t":48,
+  "u8g2_font_open_iconic_embedded_8x_t":64,
+  "u8g2_font_open_iconic_gui_1x_t":8,
+  "u8g2_font_open_iconic_gui_2x_t":16,
+  "u8g2_font_open_iconic_gui_4x_t":32,
+  "u8g2_font_open_iconic_gui_6x_t":48,
+  "u8g2_font_open_iconic_gui_8x_t":64,
+  "u8g2_font_open_iconic_human_1x_t":8,
+  "u8g2_font_open_iconic_human_2x_t":16,
+  "u8g2_font_open_iconic_human_4x_t":32,
+  "u8g2_font_open_iconic_human_6x_t":48,
+  "u8g2_font_open_iconic_human_8x_t":64,
+  "u8g2_font_open_iconic_mime_1x_t":8,
+  "u8g2_font_open_iconic_mime_2x_t":16,
+  "u8g2_font_open_iconic_mime_4x_t":32,
+  "u8g2_font_open_iconic_mime_6x_t":48,
+  "u8g2_font_open_iconic_mime_8x_t":64,
+  "u8g2_font_open_iconic_other_1x_t":7,
+  "u8g2_font_open_iconic_other_2x_t":14,
+  "u8g2_font_open_iconic_other_4x_t":28,
+  "u8g2_font_open_iconic_other_6x_t":42,
+  "u8g2_font_open_iconic_other_8x_t":56,
+  "u8g2_font_open_iconic_play_1x_t":8,
+  "u8g2_font_open_iconic_play_2x_t":16,
+  "u8g2_font_open_iconic_play_4x_t":32,
+  "u8g2_font_open_iconic_play_6x_t":48,
+  "u8g2_font_open_iconic_play_8x_t":64,
+  "u8g2_font_open_iconic_text_1x_t":8,
+  "u8g2_font_open_iconic_text_2x_t":16,
+  "u8g2_font_open_iconic_text_4x_t":32,
+  "u8g2_font_open_iconic_text_6x_t":48,
+  "u8g2_font_open_iconic_text_8x_t":64,
+  "u8g2_font_open_iconic_thing_1x_t":8,
+  "u8g2_font_open_iconic_thing_2x_t":16,
+  "u8g2_font_open_iconic_thing_4x_t":32,
+  "u8g2_font_open_iconic_thing_6x_t":48,
+  "u8g2_font_open_iconic_thing_8x_t":64,
+  "u8g2_font_open_iconic_weather_1x_t":8,
+  "u8g2_font_open_iconic_weather_2x_t":16,
+  "u8g2_font_open_iconic_weather_4x_t":32,
+  "u8g2_font_open_iconic_weather_6x_t":48,
+  "u8g2_font_open_iconic_weather_8x_t":64,
+  "u8g2_font_open_iconic_www_1x_t":8,
+  "u8g2_font_open_iconic_www_2x_t":16,
+  "u8g2_font_open_iconic_www_4x_t":32,
+  "u8g2_font_open_iconic_www_6x_t":48,
+  "u8g2_font_open_iconic_www_8x_t":64,
+  "u8g2_font_ordinarybasis_t_all":13,
+  "u8g2_font_ordinarybasis_tf":13,
+  "u8g2_font_ordinarybasis_tn":13,
+  "u8g2_font_ordinarybasis_tr":13,
+  "u8g2_font_originalsans_tr":10,
+  "u8g2_font_osb18_tf":24,
+  "u8g2_font_osb18_tn":24,
+  "u8g2_font_osb18_tr":24,
+  "u8g2_font_osb21_tf":28,
+  "u8g2_font_osb21_tn":28,
+  "u8g2_font_osb21_tr":28,
+  "u8g2_font_osb26_tf":34,
+  "u8g2_font_osb26_tn":34,
+  "u8g2_font_osb26_tr":34,
+  "u8g2_font_osb29_tf":38,
+  "u8g2_font_osb29_tn":38,
+  "u8g2_font_osb29_tr":38,
+  "u8g2_font_osb35_tf":46,
+  "u8g2_font_osb35_tn":46,
+  "u8g2_font_osb35_tr":46,
+  "u8g2_font_osb41_tf":54,
+  "u8g2_font_osb41_tn":54,
+  "u8g2_font_osb41_tr":54,
+  "u8g2_font_oskool_tf":7,
+  "u8g2_font_oskool_tn":7,
+  "u8g2_font_oskool_tr":7,
+  "u8g2_font_osr18_tf":24,
+  "u8g2_font_osr18_tn":24,
+  "u8g2_font_osr18_tr":24,
+  "u8g2_font_osr21_tf":28,
+  "u8g2_font_osr21_tn":28,
+  "u8g2_font_osr21_tr":28,
+  "u8g2_font_osr26_tf":34,
+  "u8g2_font_osr26_tn":34,
+  "u8g2_font_osr26_tr":34,
+  "u8g2_font_osr29_tf":38,
+  "u8g2_font_osr29_tn":38,
+  "u8g2_font_osr29_tr":38,
+  "u8g2_font_osr35_tf":46,
+  "u8g2_font_osr35_tn":46,
+  "u8g2_font_osr35_tr":46,
+  "u8g2_font_osr41_tf":54,
+  "u8g2_font_osr41_tn":54,
+  "u8g2_font_osr41_tr":54,
+  "u8g2_font_p01type_tf":6,
+  "u8g2_font_p01type_tn":6,
+  "u8g2_font_p01type_tr":6,
+  "u8g2_font_pcsenior_8f":8,
+  "u8g2_font_pcsenior_8n":8,
+  "u8g2_font_pcsenior_8r":8,
+  "u8g2_font_pcsenior_8u":8,
+  "u8g2_font_pearfont_tr":4,
+  "u8g2_font_percent_circle_25_hn":25,
+  "u8g2_font_pieceofcake_mel_tn":10,
+  "u8g2_font_pieceofcake_mel_tr":10,
+  "u8g2_font_pixelle_micro_tn":7,
+  "u8g2_font_pixelle_micro_tr":7,
+  "u8g2_font_pixelmordred_t_all":15,
+  "u8g2_font_pixelmordred_tf":15,
+  "u8g2_font_pixelmordred_tn":15,
+  "u8g2_font_pixelmordred_tr":15,
+  "u8g2_font_pixelpoiiz_tr":6,
+  "u8g2_font_pixzillav1_te":13,
+  "u8g2_font_pixzillav1_tf":13,
+  "u8g2_font_pixzillav1_tr":13,
+  "u8g2_font_press_mel_tn":12,
+  "u8g2_font_press_mel_tr":12,
+  "u8g2_font_pressstart2p_8f":8,
+  "u8g2_font_pressstart2p_8n":8,
+  "u8g2_font_pressstart2p_8r":8,
+  "u8g2_font_pressstart2p_8u":8,
+  "u8g2_font_princess_te":13,
+  "u8g2_font_princess_tr":13,
+  "u8g2_font_profont10_mf":8,
+  "u8g2_font_profont10_mn":8,
+  "u8g2_font_profont10_mr":8,
+  "u8g2_font_profont10_tf":8,
+  "u8g2_font_profont10_tn":8,
+  "u8g2_font_profont10_tr":8,
+  "u8g2_font_profont11_mf":9,
+  "u8g2_font_profont11_mn":9,
+  "u8g2_font_profont11_mr":9,
+  "u8g2_font_profont11_tf":9,
+  "u8g2_font_profont11_tn":9,
+  "u8g2_font_profont11_tr":9,
+  "u8g2_font_profont12_mf":10,
+  "u8g2_font_profont12_mn":10,
+  "u8g2_font_profont12_mr":10,
+  "u8g2_font_profont12_tf":10,
+  "u8g2_font_profont12_tn":10,
+  "u8g2_font_profont12_tr":10,
+  "u8g2_font_profont15_mf":12,
+  "u8g2_font_profont15_mn":12,
+  "u8g2_font_profont15_mr":12,
+  "u8g2_font_profont15_tf":12,
+  "u8g2_font_profont15_tn":12,
+  "u8g2_font_profont15_tr":12,
+  "u8g2_font_profont17_mf":14,
+  "u8g2_font_profont17_mn":14,
+  "u8g2_font_profont17_mr":14,
+  "u8g2_font_profont17_tf":14,
+  "u8g2_font_profont17_tn":14,
+  "u8g2_font_profont17_tr":14,
+  "u8g2_font_profont22_mf":18,
+  "u8g2_font_profont22_mn":18,
+  "u8g2_font_profont22_mr":18,
+  "u8g2_font_profont22_tf":18,
+  "u8g2_font_profont22_tn":18,
+  "u8g2_font_profont22_tr":18,
+  "u8g2_font_profont29_mf":24,
+  "u8g2_font_profont29_mn":24,
+  "u8g2_font_profont29_mr":24,
+  "u8g2_font_profont29_tf":24,
+  "u8g2_font_profont29_tn":24,
+  "u8g2_font_profont29_tr":24,
+  "u8g2_font_prospero_bold_nbp_tf":12,
+  "u8g2_font_prospero_bold_nbp_tn":12,
+  "u8g2_font_prospero_bold_nbp_tr":12,
+  "u8g2_font_prospero_nbp_tf":12,
+  "u8g2_font_prospero_nbp_tn":12,
+  "u8g2_font_prospero_nbp_tr":12,
+  "u8g2_font_px437wyse700a_mf":13,
+  "u8g2_font_px437wyse700a_mn":13,
+  "u8g2_font_px437wyse700a_mr":13,
+  "u8g2_font_px437wyse700a_tf":13,
+  "u8g2_font_px437wyse700a_tn":13,
+  "u8g2_font_px437wyse700a_tr":13,
+  "u8g2_font_px437wyse700b_mf":13,
+  "u8g2_font_px437wyse700b_mn":13,
+  "u8g2_font_px437wyse700b_mr":13,
+  "u8g2_font_px437wyse700b_tf":13,
+  "u8g2_font_px437wyse700b_tn":13,
+  "u8g2_font_px437wyse700b_tr":13,
+  "u8g2_font_pxclassic_te":13,
+  "u8g2_font_pxclassic_tf":13,
+  "u8g2_font_pxclassic_tr":13,
+  "u8g2_font_pxplusibmcga_8f":8,
+  "u8g2_font_pxplusibmcga_8n":8,
+  "u8g2_font_pxplusibmcga_8r":8,
+  "u8g2_font_pxplusibmcga_8u":8,
+  "u8g2_font_pxplusibmcgathin_8f":8,
+  "u8g2_font_pxplusibmcgathin_8n":8,
+  "u8g2_font_pxplusibmcgathin_8r":8,
+  "u8g2_font_pxplusibmcgathin_8u":8,
+  "u8g2_font_pxplusibmvga8_m_all":13,
+  "u8g2_font_pxplusibmvga8_mf":13,
+  "u8g2_font_pxplusibmvga8_mn":13,
+  "u8g2_font_pxplusibmvga8_mr":13,
+  "u8g2_font_pxplusibmvga8_t_all":13,
+  "u8g2_font_pxplusibmvga8_tf":13,
+  "u8g2_font_pxplusibmvga8_tn":13,
+  "u8g2_font_pxplusibmvga8_tr":13,
+  "u8g2_font_pxplusibmvga9_m_all":13,
+  "u8g2_font_pxplusibmvga9_mf":13,
+  "u8g2_font_pxplusibmvga9_mn":13,
+  "u8g2_font_pxplusibmvga9_mr":13,
+  "u8g2_font_pxplusibmvga9_t_all":13,
+  "u8g2_font_pxplusibmvga9_tf":13,
+  "u8g2_font_pxplusibmvga9_tn":13,
+  "u8g2_font_pxplusibmvga9_tr":13,
+  "u8g2_font_pxplustandynewtv_8_all":8,
+  "u8g2_font_pxplustandynewtv_8f":8,
+  "u8g2_font_pxplustandynewtv_8n":8,
+  "u8g2_font_pxplustandynewtv_8r":8,
+  "u8g2_font_pxplustandynewtv_8u":8,
+  "u8g2_font_pxplustandynewtv_t_all":8,
+  "u8g2_font_questgiver_tr":11,
+  "u8g2_font_repress_mel_tn":9,
+  "u8g2_font_repress_mel_tr":9,
+  "u8g2_font_resoledbold_tr":9,
+  "u8g2_font_resoledmedium_tr":9,
+  "u8g2_font_robot_de_niro_tf":9,
+  "u8g2_font_robot_de_niro_tn":9,
+  "u8g2_font_robot_de_niro_tr":9,
+  "u8g2_font_roentgen_nbp_h_all":9,
+  "u8g2_font_roentgen_nbp_t_all":9,
+  "u8g2_font_roentgen_nbp_tf":9,
+  "u8g2_font_roentgen_nbp_tn":9,
+  "u8g2_font_roentgen_nbp_tr":9,
+  "u8g2_font_rosencrantz_nbp_t_all":12,
+  "u8g2_font_rosencrantz_nbp_tf":12,
+  "u8g2_font_rosencrantz_nbp_tn":12,
+  "u8g2_font_rosencrantz_nbp_tr":12,
+  "u8g2_font_saikyosansbold8_8n":7,
+  "u8g2_font_saikyosansbold8_8u":7,
+  "u8g2_font_samim_10_t_all":11,
+  "u8g2_font_samim_12_t_all":12,
+  "u8g2_font_samim_14_t_all":14,
+  "u8g2_font_samim_16_t_all":16,
+  "u8g2_font_samim_fd_10_t_all":11,
+  "u8g2_font_samim_fd_12_t_all":12,
+  "u8g2_font_samim_fd_14_t_all":14,
+  "u8g2_font_samim_fd_16_t_all":16,
+  "u8g2_font_sandyforest_tn":10,
+  "u8g2_font_sandyforest_tr":10,
+  "u8g2_font_sandyforest_tu":10,
+  "u8g2_font_scrum_te":12,
+  "u8g2_font_scrum_tf":12,
+  "u8g2_font_scrum_tr":12,
+  "u8g2_font_secretaryhand_t_all":16,
+  "u8g2_font_secretaryhand_tf":16,
+  "u8g2_font_secretaryhand_tn":16,
+  "u8g2_font_secretaryhand_tr":16,
+  "u8g2_font_seraphimb1_tr":12,
+  "u8g2_font_shylock_nbp_t_all":13,
+  "u8g2_font_shylock_nbp_tf":13,
+  "u8g2_font_shylock_nbp_tn":13,
+  "u8g2_font_shylock_nbp_tr":13,
+  "u8g2_font_siji_t_6x10":9,
+  "u8g2_font_simple1_te":9,
+  "u8g2_font_simple1_tf":9,
+  "u8g2_font_simple1_tr":9,
+  "u8g2_font_sirclive_tn":9,
+  "u8g2_font_sirclive_tr":9,
+  "u8g2_font_sirclivethebold_tn":9,
+  "u8g2_font_sirclivethebold_tr":9,
+  "u8g2_font_sisterserif_tr":15,
+  "u8g2_font_smallsimple_te":8,
+  "u8g2_font_smallsimple_tr":8,
+  "u8g2_font_smart_patrol_nbp_tf":11,
+  "u8g2_font_smart_patrol_nbp_tn":11,
+  "u8g2_font_smart_patrol_nbp_tr":11,
+  "u8g2_font_smolfont_te":6,
+  "u8g2_font_smolfont_tf":6,
+  "u8g2_font_smolfont_tr":6,
+  "u8g2_font_sonicmania_te":13,
+  "u8g2_font_sonicmania_tr":13,
+  "u8g2_font_spleen12x24_me":20,
+  "u8g2_font_spleen12x24_mf":20,
+  "u8g2_font_spleen12x24_mn":24,
+  "u8g2_font_spleen12x24_mr":20,
+  "u8g2_font_spleen12x24_mu":20,
+  "u8g2_font_spleen16x32_me":26,
+  "u8g2_font_spleen16x32_mf":26,
+  "u8g2_font_spleen16x32_mn":32,
+  "u8g2_font_spleen16x32_mr":26,
+  "u8g2_font_spleen16x32_mu":26,
+  "u8g2_font_spleen32x64_me":52,
+  "u8g2_font_spleen32x64_mf":52,
+  "u8g2_font_spleen32x64_mn":64,
+  "u8g2_font_spleen32x64_mr":52,
+  "u8g2_font_spleen32x64_mu":52,
+  "u8g2_font_spleen5x8_me":7,
+  "u8g2_font_spleen5x8_mf":7,
+  "u8g2_font_spleen5x8_mn":8,
+  "u8g2_font_spleen5x8_mr":7,
+  "u8g2_font_spleen5x8_mu":7,
+  "u8g2_font_spleen6x12_me":10,
+  "u8g2_font_spleen6x12_mf":10,
+  "u8g2_font_spleen6x12_mn":12,
+  "u8g2_font_spleen6x12_mr":10,
+  "u8g2_font_spleen6x12_mu":11,
+  "u8g2_font_spleen8x16_me":13,
+  "u8g2_font_spleen8x16_mf":13,
+  "u8g2_font_spleen8x16_mn":16,
+  "u8g2_font_spleen8x16_mr":13,
+  "u8g2_font_spleen8x16_mu":14,
+  "u8g2_font_squeezed_b6_tn":7,
+  "u8g2_font_squeezed_b6_tr":7,
+  "u8g2_font_squeezed_b7_tn":8,
+  "u8g2_font_squeezed_b7_tr":8,
+  "u8g2_font_squeezed_r6_tn":7,
+  "u8g2_font_squeezed_r6_tr":7,
+  "u8g2_font_squeezed_r7_tn":8,
+  "u8g2_font_squeezed_r7_tr":8,
+  "u8g2_font_squirrel_tn":15,
+  "u8g2_font_squirrel_tr":15,
+  "u8g2_font_squirrel_tu":15,
+  "u8g2_font_standardized3x5_tr":7,
+  "u8g2_font_sticker100complete_te":14,
+  "u8g2_font_sticker100complete_tr":14,
+  "u8g2_font_sticker_mel_tn":14,
+  "u8g2_font_sticker_mel_tr":14,
+  "u8g2_font_streamline_all_t":21,
+  "u8g2_font_streamline_building_real_estate_t":21,
+  "u8g2_font_streamline_business_t":20,
+  "u8g2_font_streamline_coding_apps_websites_t":21,
+  "u8g2_font_streamline_computers_devices_electronics_t":21,
+  "u8g2_font_streamline_content_files_t":21,
+  "u8g2_font_streamline_design_t":21,
+  "u8g2_font_streamline_ecology_t":21,
+  "u8g2_font_streamline_email_t":21,
+  "u8g2_font_streamline_entertainment_events_hobbies_t":21,
+  "u8g2_font_streamline_food_drink_t":20,
+  "u8g2_font_streamline_hand_signs_t":21,
+  "u8g2_font_streamline_health_beauty_t":20,
+  "u8g2_font_streamline_interface_essential_action_t":21,
+  "u8g2_font_streamline_interface_essential_alert_t":21,
+  "u8g2_font_streamline_interface_essential_audio_t":21,
+  "u8g2_font_streamline_interface_essential_calendar_t":21,
+  "u8g2_font_streamline_interface_essential_chart_t":20,
+  "u8g2_font_streamline_interface_essential_circle_triangle_t":21,
+  "u8g2_font_streamline_interface_essential_cog_t":21,
+  "u8g2_font_streamline_interface_essential_cursor_t":20,
+  "u8g2_font_streamline_interface_essential_dial_pad_t":20,
+  "u8g2_font_streamline_interface_essential_edit_t":21,
+  "u8g2_font_streamline_interface_essential_expand_shrink_t":21,
+  "u8g2_font_streamline_interface_essential_eye_t":21,
+  "u8g2_font_streamline_interface_essential_file_t":21,
+  "u8g2_font_streamline_interface_essential_help_t":21,
+  "u8g2_font_streamline_interface_essential_hierarchy_t":20,
+  "u8g2_font_streamline_interface_essential_home_menu_t":21,
+  "u8g2_font_streamline_interface_essential_id_t":21,
+  "u8g2_font_streamline_interface_essential_key_lock_t":21,
+  "u8g2_font_streamline_interface_essential_link_t":20,
+  "u8g2_font_streamline_interface_essential_loading_t":21,
+  "u8g2_font_streamline_interface_essential_login_t":21,
+  "u8g2_font_streamline_interface_essential_other_t":21,
+  "u8g2_font_streamline_interface_essential_paginate_t":21,
+  "u8g2_font_streamline_interface_essential_search_t":21,
+  "u8g2_font_streamline_interface_essential_setting_t":21,
+  "u8g2_font_streamline_interface_essential_share_t":21,
+  "u8g2_font_streamline_interface_essential_text_t":16,
+  "u8g2_font_streamline_interface_essential_wifi_t":21,
+  "u8g2_font_streamline_interface_essential_zoom_t":21,
+  "u8g2_font_streamline_internet_network_t":18,
+  "u8g2_font_streamline_logo_t":21,
+  "u8g2_font_streamline_map_navigation_t":21,
+  "u8g2_font_streamline_money_payments_t":21,
+  "u8g2_font_streamline_music_audio_t":21,
+  "u8g2_font_streamline_pet_animals_t":21,
+  "u8g2_font_streamline_phone_t":21,
+  "u8g2_font_streamline_photography_t":21,
+  "u8g2_font_streamline_romance_t":21,
+  "u8g2_font_streamline_school_science_t":21,
+  "u8g2_font_streamline_shopping_shipping_t":19,
+  "u8g2_font_streamline_social_rewards_t":21,
+  "u8g2_font_streamline_technology_t":20,
+  "u8g2_font_streamline_transportation_t":19,
+  "u8g2_font_streamline_travel_wayfinding_t":20,
+  "u8g2_font_streamline_users_t":21,
+  "u8g2_font_streamline_video_movies_t":21,
+  "u8g2_font_streamline_weather_t":21,
+  "u8g2_font_stylishcharm_te":9,
+  "u8g2_font_stylishcharm_tr":9,
+  "u8g2_font_synchronizer_nbp_tf":6,
+  "u8g2_font_synchronizer_nbp_tn":6,
+  "u8g2_font_synchronizer_nbp_tr":6,
+  "u8g2_font_t0_11_me":10,
+  "u8g2_font_t0_11_mf":10,
+  "u8g2_font_t0_11_mn":11,
+  "u8g2_font_t0_11_mr":10,
+  "u8g2_font_t0_11_t_all":10,
+  "u8g2_font_t0_11_t_symbol":10,
+  "u8g2_font_t0_11_te":10,
+  "u8g2_font_t0_11_tf":10,
+  "u8g2_font_t0_11_tn":11,
+  "u8g2_font_t0_11_tr":10,
+  "u8g2_font_t0_11b_me":10,
+  "u8g2_font_t0_11b_mf":10,
+  "u8g2_font_t0_11b_mn":11,
+  "u8g2_font_t0_11b_mr":10,
+  "u8g2_font_t0_11b_te":10,
+  "u8g2_font_t0_11b_tf":10,
+  "u8g2_font_t0_11b_tn":11,
+  "u8g2_font_t0_11b_tr":10,
+  "u8g2_font_t0_12_me":10,
+  "u8g2_font_t0_12_mf":10,
+  "u8g2_font_t0_12_mn":12,
+  "u8g2_font_t0_12_mr":10,
+  "u8g2_font_t0_12_t_symbol":10,
+  "u8g2_font_t0_12_te":10,
+  "u8g2_font_t0_12_tf":10,
+  "u8g2_font_t0_12_tn":12,
+  "u8g2_font_t0_12_tr":10,
+  "u8g2_font_t0_12b_me":10,
+  "u8g2_font_t0_12b_mf":10,
+  "u8g2_font_t0_12b_mn":12,
+  "u8g2_font_t0_12b_mr":10,
+  "u8g2_font_t0_12b_te":10,
+  "u8g2_font_t0_12b_tf":10,
+  "u8g2_font_t0_12b_tn":12,
+  "u8g2_font_t0_12b_tr":10,
+  "u8g2_font_t0_13_me":11,
+  "u8g2_font_t0_13_mf":11,
+  "u8g2_font_t0_13_mn":13,
+  "u8g2_font_t0_13_mr":11,
+  "u8g2_font_t0_13_t_symbol":11,
+  "u8g2_font_t0_13_te":11,
+  "u8g2_font_t0_13_tf":11,
+  "u8g2_font_t0_13_tn":13,
+  "u8g2_font_t0_13_tr":11,
+  "u8g2_font_t0_13b_me":11,
+  "u8g2_font_t0_13b_mf":11,
+  "u8g2_font_t0_13b_mn":13,
+  "u8g2_font_t0_13b_mr":11,
+  "u8g2_font_t0_13b_te":11,
+  "u8g2_font_t0_13b_tf":11,
+  "u8g2_font_t0_13b_tn":13,
+  "u8g2_font_t0_13b_tr":11,
+  "u8g2_font_t0_14_me":11,
+  "u8g2_font_t0_14_mf":11,
+  "u8g2_font_t0_14_mn":14,
+  "u8g2_font_t0_14_mr":11,
+  "u8g2_font_t0_14_t_symbol":11,
+  "u8g2_font_t0_14_te":11,
+  "u8g2_font_t0_14_tf":11,
+  "u8g2_font_t0_14_tn":14,
+  "u8g2_font_t0_14_tr":11,
+  "u8g2_font_t0_14b_me":11,
+  "u8g2_font_t0_14b_mf":11,
+  "u8g2_font_t0_14b_mn":14,
+  "u8g2_font_t0_14b_mr":11,
+  "u8g2_font_t0_14b_te":11,
+  "u8g2_font_t0_14b_tf":11,
+  "u8g2_font_t0_14b_tn":14,
+  "u8g2_font_t0_14b_tr":11,
+  "u8g2_font_t0_15_me":13,
+  "u8g2_font_t0_15_mf":13,
+  "u8g2_font_t0_15_mn":15,
+  "u8g2_font_t0_15_mr":13,
+  "u8g2_font_t0_15_t_symbol":13,
+  "u8g2_font_t0_15_te":13,
+  "u8g2_font_t0_15_tf":13,
+  "u8g2_font_t0_15_tn":15,
+  "u8g2_font_t0_15_tr":13,
+  "u8g2_font_t0_15b_me":13,
+  "u8g2_font_t0_15b_mf":13,
+  "u8g2_font_t0_15b_mn":15,
+  "u8g2_font_t0_15b_mr":13,
+  "u8g2_font_t0_15b_te":13,
+  "u8g2_font_t0_15b_tf":13,
+  "u8g2_font_t0_15b_tn":15,
+  "u8g2_font_t0_15b_tr":13,
+  "u8g2_font_t0_16_me":13,
+  "u8g2_font_t0_16_mf":13,
+  "u8g2_font_t0_16_mn":16,
+  "u8g2_font_t0_16_mr":13,
+  "u8g2_font_t0_16_t_symbol":13,
+  "u8g2_font_t0_16_te":13,
+  "u8g2_font_t0_16_tf":13,
+  "u8g2_font_t0_16_tn":16,
+  "u8g2_font_t0_16_tr":13,
+  "u8g2_font_t0_16b_me":13,
+  "u8g2_font_t0_16b_mf":13,
+  "u8g2_font_t0_16b_mn":16,
+  "u8g2_font_t0_16b_mr":13,
+  "u8g2_font_t0_16b_te":13,
+  "u8g2_font_t0_16b_tf":13,
+  "u8g2_font_t0_16b_tn":16,
+  "u8g2_font_t0_16b_tr":13,
+  "u8g2_font_t0_17_me":14,
+  "u8g2_font_t0_17_mf":14,
+  "u8g2_font_t0_17_mn":17,
+  "u8g2_font_t0_17_mr":14,
+  "u8g2_font_t0_17_t_symbol":14,
+  "u8g2_font_t0_17_te":14,
+  "u8g2_font_t0_17_tf":14,
+  "u8g2_font_t0_17_tn":17,
+  "u8g2_font_t0_17_tr":14,
+  "u8g2_font_t0_17b_me":14,
+  "u8g2_font_t0_17b_mf":14,
+  "u8g2_font_t0_17b_mn":17,
+  "u8g2_font_t0_17b_mr":14,
+  "u8g2_font_t0_17b_te":14,
+  "u8g2_font_t0_17b_tf":14,
+  "u8g2_font_t0_17b_tn":17,
+  "u8g2_font_t0_17b_tr":14,
+  "u8g2_font_t0_18_me":14,
+  "u8g2_font_t0_18_mf":14,
+  "u8g2_font_t0_18_mn":18,
+  "u8g2_font_t0_18_mr":14,
+  "u8g2_font_t0_18_t_symbol":14,
+  "u8g2_font_t0_18_te":14,
+  "u8g2_font_t0_18_tf":14,
+  "u8g2_font_t0_18_tn":18,
+  "u8g2_font_t0_18_tr":14,
+  "u8g2_font_t0_18b_me":14,
+  "u8g2_font_t0_18b_mf":14,
+  "u8g2_font_t0_18b_mn":18,
+  "u8g2_font_t0_18b_mr":14,
+  "u8g2_font_t0_18b_te":14,
+  "u8g2_font_t0_18b_tf":14,
+  "u8g2_font_t0_18b_tn":18,
+  "u8g2_font_t0_18b_tr":14,
+  "u8g2_font_t0_22_me":17,
+  "u8g2_font_t0_22_mf":17,
+  "u8g2_font_t0_22_mn":22,
+  "u8g2_font_t0_22_mr":17,
+  "u8g2_font_t0_22_t_symbol":17,
+  "u8g2_font_t0_22_te":17,
+  "u8g2_font_t0_22_tf":17,
+  "u8g2_font_t0_22_tn":22,
+  "u8g2_font_t0_22_tr":17,
+  "u8g2_font_t0_22b_me":17,
+  "u8g2_font_t0_22b_mf":17,
+  "u8g2_font_t0_22b_mn":22,
+  "u8g2_font_t0_22b_mr":17,
+  "u8g2_font_t0_22b_te":17,
+  "u8g2_font_t0_22b_tf":17,
+  "u8g2_font_t0_22b_tn":22,
+  "u8g2_font_t0_22b_tr":17,
+  "u8g2_font_t0_30_me":22,
+  "u8g2_font_t0_30_mf":22,
+  "u8g2_font_t0_30_mn":30,
+  "u8g2_font_t0_30_mr":22,
+  "u8g2_font_t0_30_t_symbol":22,
+  "u8g2_font_t0_30_te":22,
+  "u8g2_font_t0_30_tf":22,
+  "u8g2_font_t0_30_tn":30,
+  "u8g2_font_t0_30_tr":22,
+  "u8g2_font_t0_30b_me":22,
+  "u8g2_font_t0_30b_mf":22,
+  "u8g2_font_t0_30b_mn":30,
+  "u8g2_font_t0_30b_mr":22,
+  "u8g2_font_t0_30b_te":22,
+  "u8g2_font_t0_30b_tf":22,
+  "u8g2_font_t0_30b_tn":30,
+  "u8g2_font_t0_30b_tr":22,
+  "u8g2_font_t0_40_me":30,
+  "u8g2_font_t0_40_mf":30,
+  "u8g2_font_t0_40_mn":40,
+  "u8g2_font_t0_40_mr":30,
+  "u8g2_font_t0_40_t_symbol":30,
+  "u8g2_font_t0_40_te":30,
+  "u8g2_font_t0_40_tf":30,
+  "u8g2_font_t0_40_tn":40,
+  "u8g2_font_t0_40_tr":30,
+  "u8g2_font_t0_40b_me":30,
+  "u8g2_font_t0_40b_mf":30,
+  "u8g2_font_t0_40b_mn":40,
+  "u8g2_font_t0_40b_mr":30,
+  "u8g2_font_t0_40b_te":30,
+  "u8g2_font_t0_40b_tf":30,
+  "u8g2_font_t0_40b_tn":40,
+  "u8g2_font_t0_40b_tr":30,
+  "u8g2_font_tallpix_tr":16,
+  "u8g2_font_tallpixelextended_te":11,
+  "u8g2_font_tallpixelextended_tf":11,
+  "u8g2_font_tallpixelextended_tr":11,
+  "u8g2_font_tenfatguys_t_all":13,
+  "u8g2_font_tenfatguys_tf":13,
+  "u8g2_font_tenfatguys_tn":13,
+  "u8g2_font_tenfatguys_tr":13,
+  "u8g2_font_tenfatguys_tu":13,
+  "u8g2_font_tenstamps_mf":15,
+  "u8g2_font_tenstamps_mn":15,
+  "u8g2_font_tenstamps_mr":15,
+  "u8g2_font_tenstamps_mu":15,
+  "u8g2_font_tenthinguys_t_all":12,
+  "u8g2_font_tenthinguys_tf":12,
+  "u8g2_font_tenthinguys_tn":12,
+  "u8g2_font_tenthinguys_tr":12,
+  "u8g2_font_tenthinguys_tu":12,
+  "u8g2_font_tenthinnerguys_t_all":12,
+  "u8g2_font_tenthinnerguys_tf":12,
+  "u8g2_font_tenthinnerguys_tn":12,
+  "u8g2_font_tenthinnerguys_tr":12,
+  "u8g2_font_tenthinnerguys_tu":12,
+  "u8g2_font_threepix_tr":6,
+  "u8g2_font_timB08_tf":10,
+  "u8g2_font_timB08_tn":10,
+  "u8g2_font_timB08_tr":10,
+  "u8g2_font_timB10_tf":13,
+  "u8g2_font_timB10_tn":13,
+  "u8g2_font_timB10_tr":13,
+  "u8g2_font_timB12_tf":15,
+  "u8g2_font_timB12_tn":15,
+  "u8g2_font_timB12_tr":15,
+  "u8g2_font_timB14_tf":17,
+  "u8g2_font_timB14_tn":17,
+  "u8g2_font_timB14_tr":17,
+  "u8g2_font_timB18_tf":22,
+  "u8g2_font_timB18_tn":22,
+  "u8g2_font_timB18_tr":22,
+  "u8g2_font_timB24_tf":30,
+  "u8g2_font_timB24_tn":30,
+  "u8g2_font_timB24_tr":30,
+  "u8g2_font_timR08_tf":9,
+  "u8g2_font_timR08_tn":9,
+  "u8g2_font_timR08_tr":9,
+  "u8g2_font_timR10_tf":13,
+  "u8g2_font_timR10_tn":13,
+  "u8g2_font_timR10_tr":13,
+  "u8g2_font_timR12_tf":15,
+  "u8g2_font_timR12_tn":15,
+  "u8g2_font_timR12_tr":15,
+  "u8g2_font_timR14_tf":17,
+  "u8g2_font_timR14_tn":17,
+  "u8g2_font_timR14_tr":17,
+  "u8g2_font_timR18_tf":23,
+  "u8g2_font_timR18_tn":23,
+  "u8g2_font_timR18_tr":23,
+  "u8g2_font_timR24_tf":30,
+  "u8g2_font_timR24_tn":30,
+  "u8g2_font_timR24_tr":30,
+  "u8g2_font_tiny5_t_all":6,
+  "u8g2_font_tiny5_te":6,
+  "u8g2_font_tiny5_tf":6,
+  "u8g2_font_tiny5_tr":6,
+  "u8g2_font_tiny_gk_tr":6,
+  "u8g2_font_tiny_simon_mr":7,
+  "u8g2_font_tiny_simon_tr":7,
+  "u8g2_font_tinyface_te":7,
+  "u8g2_font_tinyface_tr":7,
+  "u8g2_font_tinypixie2_tr":6,
+  "u8g2_font_tinytim_tf":6,
+  "u8g2_font_tinytim_tn":6,
+  "u8g2_font_tinytim_tr":6,
+  "u8g2_font_tinyunicode_te":7,
+  "u8g2_font_tinyunicode_tf":7,
+  "u8g2_font_tinyunicode_tr":7,
+  "u8g2_font_tom_thumb_4x6_me":6,
+  "u8g2_font_tom_thumb_4x6_mf":6,
+  "u8g2_font_tom_thumb_4x6_mn":6,
+  "u8g2_font_tom_thumb_4x6_mr":6,
+  "u8g2_font_tom_thumb_4x6_t_all":6,
+  "u8g2_font_tom_thumb_4x6_te":6,
+  "u8g2_font_tom_thumb_4x6_tf":6,
+  "u8g2_font_tom_thumb_4x6_tn":6,
+  "u8g2_font_tom_thumb_4x6_tr":6,
+  "u8g2_font_tooseornament_tf":12,
+  "u8g2_font_tooseornament_tn":12,
+  "u8g2_font_tooseornament_tr":12,
+  "u8g2_font_torussansbold8_8n":8,
+  "u8g2_font_torussansbold8_8r":8,
+  "u8g2_font_torussansbold8_8u":8,
+  "u8g2_font_trixel_square_tf":7,
+  "u8g2_font_trixel_square_tn":7,
+  "u8g2_font_trixel_square_tr":7,
+  "u8g2_font_twelvedings_t_all":12,
+  "u8g2_font_u8glib_4_hf":5,
+  "u8g2_font_u8glib_4_hr":5,
+  "u8g2_font_u8glib_4_tf":5,
+  "u8g2_font_u8glib_4_tr":5,
+  "u8g2_font_unifont_h_symbols":12,
+  "u8g2_font_unifont_t_0_72_73":12,
+  "u8g2_font_unifont_t_0_75":12,
+  "u8g2_font_unifont_t_0_76":12,
+  "u8g2_font_unifont_t_0_77":12,
+  "u8g2_font_unifont_t_0_78_79":12,
+  "u8g2_font_unifont_t_0_86":12,
+  "u8g2_font_unifont_t_72_73":16,
+  "u8g2_font_unifont_t_75":16,
+  "u8g2_font_unifont_t_76":16,
+  "u8g2_font_unifont_t_77":16,
+  "u8g2_font_unifont_t_78_79":16,
+  "u8g2_font_unifont_t_86":16,
+  "u8g2_font_unifont_t_arabic":12,
+  "u8g2_font_unifont_t_bengali":12,
+  "u8g2_font_unifont_t_chinese1":12,
+  "u8g2_font_unifont_t_chinese2":12,
+  "u8g2_font_unifont_t_chinese3":12,
+  "u8g2_font_unifont_t_cyrillic":12,
+  "u8g2_font_unifont_t_devanagari":12,
+  "u8g2_font_unifont_t_extended":12,
+  "u8g2_font_unifont_t_gb2312":12,
+  "u8g2_font_unifont_t_gb2312a":12,
+  "u8g2_font_unifont_t_gb2312b":12,
+  "u8g2_font_unifont_t_greek":12,
+  "u8g2_font_unifont_t_hebrew":12,
+  "u8g2_font_unifont_t_japanese1":12,
+  "u8g2_font_unifont_t_japanese2":12,
+  "u8g2_font_unifont_t_japanese3":12,
+  "u8g2_font_unifont_t_korean1":12,
+  "u8g2_font_unifont_t_korean2":12,
+  "u8g2_font_unifont_t_latin":12,
+  "u8g2_font_unifont_t_malayalam":12,
+  "u8g2_font_unifont_t_polish":12,
+  "u8g2_font_unifont_t_symbols":12,
+  "u8g2_font_unifont_t_tibetan":12,
+  "u8g2_font_unifont_t_urdu":12,
+  "u8g2_font_unifont_t_vietnamese1":12,
+  "u8g2_font_unifont_t_vietnamese2":12,
+  "u8g2_font_unifont_te":12,
+  "u8g2_font_unifont_tf":12,
+  "u8g2_font_unifont_tr":12,
+  "u8g2_font_utopia24_te":22,
+  "u8g2_font_utopia24_tf":22,
+  "u8g2_font_utopia24_tn":22,
+  "u8g2_font_utopia24_tr":22,
+  "u8g2_font_victoriabold8_8n":8,
+  "u8g2_font_victoriabold8_8r":8,
+  "u8g2_font_victoriabold8_8u":8,
+  "u8g2_font_victoriamedium8_8n":8,
+  "u8g2_font_victoriamedium8_8r":8,
+  "u8g2_font_victoriamedium8_8u":8,
+  "u8g2_font_wedge_tr":6,
+  "u8g2_font_wqy12_t_chinese1":10,
+  "u8g2_font_wqy12_t_chinese2":10,
+  "u8g2_font_wqy12_t_chinese3":10,
+  "u8g2_font_wqy12_t_gb2312":10,
+  "u8g2_font_wqy12_t_gb2312a":10,
+  "u8g2_font_wqy12_t_gb2312b":10,
+  "u8g2_font_wqy13_t_chinese1":12,
+  "u8g2_font_wqy13_t_chinese2":12,
+  "u8g2_font_wqy13_t_chinese3":12,
+  "u8g2_font_wqy13_t_gb2312":12,
+  "u8g2_font_wqy13_t_gb2312a":12,
+  "u8g2_font_wqy13_t_gb2312b":12,
+  "u8g2_font_wqy14_t_chinese1":12,
+  "u8g2_font_wqy14_t_chinese2":12,
+  "u8g2_font_wqy14_t_chinese3":12,
+  "u8g2_font_wqy14_t_gb2312":12,
+  "u8g2_font_wqy14_t_gb2312a":12,
+  "u8g2_font_wqy14_t_gb2312b":12,
+  "u8g2_font_wqy15_t_chinese1":14,
+  "u8g2_font_wqy15_t_chinese2":14,
+  "u8g2_font_wqy15_t_chinese3":14,
+  "u8g2_font_wqy15_t_gb2312":14,
+  "u8g2_font_wqy15_t_gb2312a":14,
+  "u8g2_font_wqy15_t_gb2312b":14,
+  "u8g2_font_wqy16_t_chinese1":14,
+  "u8g2_font_wqy16_t_chinese2":14,
+  "u8g2_font_wqy16_t_chinese3":14,
+  "u8g2_font_wqy16_t_gb2312":14,
+  "u8g2_font_wqy16_t_gb2312a":14,
+  "u8g2_font_wqy16_t_gb2312b":14
+}/* HEIGHTS_END */;
 
 // ── State ────────────────────────────────────────────────────────────────────
-let allFonts      = [];   // [{name, baseName, family, height, mode, charset}]
+let allFonts      = [];   // [{name, baseName, family, height, heightVerified, mode, charset}]
 let filteredFonts = [];
 let selectedName  = null;
 const bdfCache    = {};   // baseName → parsed BDF object | null
+const u8g2Cache   = {};   // fontName → parsed U8g2 object | null
+
+// Height slider range (updated after font list loads)
+let sliderMin = 4;
+let sliderMax = 99;
 
 // ── Font name parser ─────────────────────────────────────────────────────────
-// u8g2_font_ncenB08_tr → {baseName:'ncenB08', family:'ncenB', height:8, mode:'t', charset:'r'}
+// Valid single-char mode codes used by u8g2.
+const VALID_MODES = new Set(['t', 'h', 'm', '8']);
+
 function parseFont(name) {
-  const base = name.replace(/^u8g2_font_/, '');
-  const idx  = base.lastIndexOf('_');
-  if (idx < 1) return null;
+  const stripped = name.replace(/^u8g2_font_/, '');
+  const parts    = stripped.split('_');
+  if (parts.length < 2) return null;
 
-  const baseName = base.slice(0, idx);
-  const suffix   = base.slice(idx + 1);
-  if (!baseName || !suffix) return null;
+  const last     = parts[parts.length - 1];
+  const prevLast = parts[parts.length - 2] || '';
 
-  const mode    = suffix[0];
-  const charset = suffix.slice(1); // may be empty for single-char suffixes
+  let mode, charset, baseParts;
 
-  // Extract trailing digit run as height; rest is family
-  const hm     = baseName.match(/(\d+)$/);
-  const height  = hm ? parseInt(hm[1]) : 0;
-  // For pure dimension names like "5x7", "6x12" the whole baseName is the family
-  const family  = (hm && !/^\d+x\d+$/.test(baseName))
+  if (VALID_MODES.has(last[0])) {
+    // Normal suffix: "tr", "tf", "hn", "mr", "t" etc.
+    mode = last[0]; charset = last.slice(1);
+    baseParts = parts.slice(0, -1);
+  } else if (prevLast.length === 1 && VALID_MODES.has(prevLast)) {
+    // Extended suffix: "t" + "cyrillic", "t" + "all", "t" + "gb2312" etc.
+    mode = prevLast; charset = last;
+    baseParts = parts.slice(0, -2);
+  } else {
+    // Fallback: treat as single-token suffix
+    mode = last[0]; charset = last.slice(1);
+    baseParts = parts.slice(0, -1);
+  }
+
+  const baseName = baseParts.join('_');
+  if (!baseName) return null;
+
+  // Family: strip trailing digit run, but keep intact if the baseName ends with
+  // a WxH pattern like "5x7" or "boutique_bitmap_7x7" (dimension, not a height).
+  const hm    = baseName.match(/(\d+)$/);
+  const family = ((hm && !/\d+x\d+$/.test(baseName))
     ? baseName.slice(0, -hm[0].length)
-    : baseName;
+    : baseName).replace(/_+$/, '');
 
-  return { name, baseName, family, height, mode, charset };
+  // Height is always 0 here — FONT_HEIGHTS table or lazy render-time update fills it in.
+  // Name-based extraction is skipped: trailing digits may be version/year numbers.
+  return { name, baseName, family, height: 0, heightVerified: false, mode, charset };
 }
 
 // ── Charset → filter key ─────────────────────────────────────────────────────
-function charsetKey(cs) {
-  if (!cs)              return 's';
-  if (cs === 'r')       return 'r';
-  if (cs === 'f')       return 'f';
-  if (cs === 'n')       return 'n';
-  if (cs === 'u')       return 'u';
-  if (cs === 'e')       return 'e';
-  if (cs.includes('cyr'))  return 'c';
-  if (cs.includes('icon')) return 'i';
-  return 's'; // symbols, latin ext, others
+// cs = charset portion of the font suffix; baseName used for icon-family detection.
+function charsetKey(cs, baseName) {
+  if (!cs || cs === 's') {
+    if (baseName && (baseName.includes('icon') || baseName.includes('iconic'))) return 'i';
+    return 's';
+  }
+  if (cs === 'r')  return 'r';
+  if (cs === 'f' || cs === 'all') return 'f';   // t_all = full charset
+  if (cs === 'n')  return 'n';
+  if (cs === 'u')  return 'u';
+  if (cs === 'e')  return 'e';
+  // Non-Latin scripts
+  if (cs.includes('cyr') || cs.includes('hebrew') || cs.includes('arabic') ||
+      cs.includes('greek')) return 'c';
+  // Icon / pictogram families
+  if (cs.includes('icon') ||
+      (baseName && (baseName.includes('icon') || baseName.includes('iconic')))) return 'i';
+  return 's';
 }
 
 // ── Font list loader ─────────────────────────────────────────────────────────
 async function loadFontList() {
-  // Try session cache first
   try {
     const cached = sessionStorage.getItem(CACHE_KEY);
     if (cached) {
       allFonts = JSON.parse(cached);
+      // Ensure heightVerified field exists on cached entries
+      allFonts.forEach(f => { if (f.heightVerified === undefined) f.heightVerified = false; });
+      applyFontHeights();
+      initHeightSliders();
       applyFilters();
       setStatus('');
       return;
@@ -399,7 +2476,7 @@ async function loadFontList() {
     return;
   }
 
-  const seen = new Set();
+  const seen  = new Set();
   const fonts = [];
   for (const line of text.split('\n')) {
     const matches = line.match(/\bu8g2_font_\w+\b/g);
@@ -413,10 +2490,51 @@ async function loadFontList() {
   }
 
   allFonts = fonts;
+  applyFontHeights();
   try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(allFonts)); } catch (_) {}
 
+  initHeightSliders();
   applyFilters();
   setStatus('');
+}
+
+// ── Apply pre-computed height table ──────────────────────────────────────────
+// Overrides name-parsed heights with verified values from FONT_HEIGHTS.
+// Fonts absent from the table keep their name-parsed height until first render.
+function applyFontHeights() {
+  allFonts.forEach(f => {
+    const h = FONT_HEIGHTS[f.name];
+    if (h > 0) { f.height = h; f.heightVerified = true; }
+  });
+}
+
+// ── Height slider initialisation ─────────────────────────────────────────────
+function initHeightSliders() {
+  const knownHeights = allFonts.filter(f => f.height > 0).map(f => f.height);
+  if (knownHeights.length === 0) return;
+
+  const minH = Math.min(...knownHeights);
+  const maxH = Math.max(...knownHeights);
+  sliderMin = minH;
+  sliderMax = maxH;
+
+  const minSlider = document.getElementById('heightMin');
+  const maxSlider = document.getElementById('heightMax');
+
+  minSlider.min   = minH; minSlider.max = maxH; minSlider.value = minH;
+  maxSlider.min   = minH; maxSlider.max = maxH; maxSlider.value = maxH;
+  document.getElementById('heightMinVal').textContent = minH;
+  document.getElementById('heightMaxVal').textContent = maxH;
+}
+
+// ── Tri-state helper ─────────────────────────────────────────────────────────
+function getTriStates(filterName) {
+  const req = new Set(), exc = new Set();
+  document.querySelectorAll(`.tri-check[data-filter="${filterName}"]`).forEach(el => {
+    if (el.dataset.state === 'req') req.add(el.dataset.value);
+    if (el.dataset.state === 'exc') exc.add(el.dataset.value);
+  });
+  return { req, exc };
 }
 
 // ── Filtering ────────────────────────────────────────────────────────────────
@@ -424,19 +2542,23 @@ function applyFilters() {
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
   const hMin   = parseInt(document.getElementById('heightMin').value);
   const hMax   = parseInt(document.getElementById('heightMax').value);
+  const heightDefault = (hMin === sliderMin && hMax === sliderMax);
 
-  const activeModes = new Set(
-    [...document.querySelectorAll('[id^="m_"]')].filter(el => el.checked).map(el => el.value)
-  );
-  const activeCharsets = new Set(
-    [...document.querySelectorAll('[id^="c_"]')].filter(el => el.checked).map(el => el.value)
-  );
+  const { req: reqM, exc: excM } = getTriStates('mode');
+  const { req: reqC, exc: excC } = getTriStates('charset');
 
   filteredFonts = allFonts.filter(f => {
     if (search && !f.name.toLowerCase().includes(search)) return false;
+    // Height: unknown-height fonts shown only when full range is selected
+    if (f.height === 0 && !heightDefault) return false;
     if (f.height > 0 && (f.height < hMin || f.height > hMax)) return false;
-    if (!activeModes.has(f.mode)) return false;
-    if (!activeCharsets.has(charsetKey(f.charset))) return false;
+    // Mode tri-state
+    if (excM.has(f.mode)) return false;
+    if (reqM.size > 0 && !reqM.has(f.mode)) return false;
+    // Charset tri-state
+    const ck = charsetKey(f.charset, f.baseName);
+    if (excC.has(ck)) return false;
+    if (reqC.size > 0 && !reqC.has(ck)) return false;
     return true;
   });
 
@@ -451,8 +2573,19 @@ function renderFontList() {
   document.getElementById('fontList').innerHTML = filteredFonts.map(f => {
     const sel  = f.name === selectedName ? ' selected' : '';
     const disp = f.name.replace('u8g2_font_', '');
-    return `<div class="font-item${sel}" data-name="${f.name}" title="${f.name}">${disp}</div>`;
+    const hStr = f.height > 0 ? f.height : '?';
+    return `<div class="font-item${sel}" data-name="${f.name}" title="${f.name}">` +
+           `<span class="fh">${hStr}</span>${disp}</div>`;
   }).join('');
+}
+
+// ── Update a single font-list item's height span ─────────────────────────────
+function updateFontListItem(font) {
+  const el = document.querySelector(`.font-item[data-name="${CSS.escape(font.name)}"]`);
+  if (el) {
+    const fh = el.querySelector('.fh');
+    if (fh) fh.textContent = font.height > 0 ? font.height : '?';
+  }
 }
 
 // ── Font selection ───────────────────────────────────────────────────────────
@@ -460,7 +2593,6 @@ function selectFont(name) {
   if (name === selectedName) return;
   selectedName = name;
 
-  // Update highlight
   document.querySelectorAll('.font-item').forEach(el =>
     el.classList.toggle('selected', el.dataset.name === name)
   );
@@ -470,13 +2602,11 @@ function selectFont(name) {
   const font = allFonts.find(f => f.name === name);
   if (!font) return;
 
-  // Update meta bar
   document.getElementById('fontNameDisp').textContent = name;
   const wikiLink = document.getElementById('wikiLink');
   const srcLink  = document.getElementById('srcLink');
   const copyBtn  = document.getElementById('copyBtn');
 
-  // Wiki family: for dimension names like "5x7" use baseName; for "ncenB" use family
   const wikiFam = font.family.toLowerCase();
   wikiLink.href = WIKI_BASE + wikiFam;
   wikiLink.style.display = '';
@@ -497,7 +2627,6 @@ function parseBDF(text) {
   let i = 0;
   const n = lines.length;
 
-  // Global header — collect FONT_ASCENT / FONT_DESCENT until CHARS line
   while (i < n) {
     const line = lines[i++].trim();
     if (line.startsWith('FONT_ASCENT'))        fontAscent  = parseInt(line.split(/\s+/)[1]);
@@ -505,7 +2634,6 @@ function parseBDF(text) {
     else if (/^CHARS(\s|$)/.test(line))        break;
   }
 
-  // Glyph loop
   while (i < n) {
     const startLine = lines[i++].trim();
     if (!startLine.startsWith('STARTCHAR')) continue;
@@ -529,7 +2657,6 @@ function parseBDF(text) {
       else if (line === 'BITMAP')  inBitmap = true;
       else if (line === 'ENDCHAR') break inner;
       else if (inBitmap) {
-        // Each pair of hex chars = 1 byte (MSB = leftmost pixel)
         const bytes = [];
         for (let b = 0; b < line.length; b += 2)
           bytes.push(parseInt(line.slice(b, b + 2), 16));
@@ -560,18 +2687,234 @@ async function fetchBDF(baseName) {
   }
 }
 
-// ── Text renderer (BDF → ImageData) ─────────────────────────────────────────
+// ── U8g2 binary .c font parser ───────────────────────────────────────────────
+
+// Step A: parse C source text → Uint8Array
+function parseCFontBytes(text) {
+  // Locate the array initialiser — handles both formats:
+  //   const uint8_t name[N] = "..."          (old style)
+  //   ...U8G2_FONT_SECTION("name") = "..."   (new style — most fonts)
+  // Match the first [)] or ] that is directly followed by optional whitespace then '='.
+  const eqMatch = text.match(/[)\]]\s*=/);
+  if (!eqMatch) return new Uint8Array(0);
+  const afterEq = text.slice(eqMatch.index + eqMatch[0].length);
+
+  const bytes = [];
+  // Match each "..." string literal (handles escaped chars inside)
+  const strRe = /"((?:[^"\\]|\\.)*)"/g;
+  let m;
+  while ((m = strRe.exec(afterEq)) !== null) {
+    const s = m[1];
+    let i = 0;
+    while (i < s.length) {
+      if (s[i] === '\\') {
+        i++;
+        if (i >= s.length) break;
+        if (s[i] === 'x') {
+          // \xNN hex escape
+          bytes.push(parseInt(s.slice(i + 1, i + 3), 16) || 0);
+          i += 3;
+        } else if (s[i] >= '0' && s[i] <= '7') {
+          // \NNN octal escape (1–3 digits)
+          let j = i;
+          while (j < i + 3 && j < s.length && s[j] >= '0' && s[j] <= '7') j++;
+          bytes.push(parseInt(s.slice(i, j), 8));
+          i = j;
+        } else {
+          // Named escapes
+          const esc = { n: 10, r: 13, t: 9, '0': 0, '\\': 92, '"': 34, "'": 39 };
+          bytes.push(esc[s[i]] !== undefined ? esc[s[i]] : s.codePointAt(i));
+          i++;
+        }
+      } else {
+        bytes.push(s.codePointAt(i));
+        i++;
+      }
+    }
+  }
+  return new Uint8Array(bytes);
+}
+
+// Signed byte helper
+function toS8(b) { return b >= 0x80 ? b - 0x100 : b; }
+
+// Step B: parse 23-byte header
+// Section offsets are big-endian per u8g2_font_get_uint16() (high byte first).
+function parseU8G2Header(bytes) {
+  const u16be = o => (bytes[o] << 8) | bytes[o + 1];
+  return {
+    bits_per_0:           bytes[2],
+    bits_per_1:           bytes[3],
+    bits_per_char_width:  bytes[4],
+    bits_per_char_height: bytes[5],
+    bits_per_char_x:      bytes[6],
+    bits_per_char_y:      bytes[7],
+    bits_per_delta_x:     bytes[8],
+    ascent_A:             bytes[13],
+    descent_g:            toS8(bytes[14]),
+    start_pos_upper_A:    u16be(17),
+    start_pos_lower_a:    u16be(19),
+    start_pos_unicode:    u16be(21),
+  };
+}
+
+// Step D: bit-stream reader (LSB of each byte first)
+function makeBitStream(bytes, byteOffset) {
+  let bitPos = 0;
+
+  function getUnsigned(cnt) {
+    let val = 0;
+    for (let i = 0; i < cnt; i++) {
+      const bIdx = byteOffset + Math.floor(bitPos / 8);
+      const b    = bIdx < bytes.length ? bytes[bIdx] : 0;
+      if ((b >> (bitPos % 8)) & 1) val |= (1 << i);
+      bitPos++;
+    }
+    return val;
+  }
+
+  function getSigned(cnt) {
+    if (cnt === 0) return 0;
+    const val = getUnsigned(cnt);
+    return val - (1 << (cnt - 1));
+  }
+
+  function getRun(bitsPerRun) {
+    if (bitsPerRun === 0) return 1;
+    const cnt  = getUnsigned(bitsPerRun);
+    const flag = getUnsigned(1);
+    return flag ? cnt + (1 << bitsPerRun) : cnt;
+  }
+
+  return { getUnsigned, getSigned, getRun };
+}
+
+// Convert flat pixel array → BDF-compatible bitmapRows
+function pixelsToRows(pixels, w, h) {
+  const bytesPerRow = Math.ceil(w / 8);
+  const rows = [];
+  for (let r = 0; r < h; r++) {
+    const rowBytes = new Array(bytesPerRow).fill(0);
+    for (let col = 0; col < w; col++) {
+      if (pixels[r * w + col]) {
+        rowBytes[col >> 3] |= (1 << (7 - (col & 7)));
+      }
+    }
+    rows.push(rowBytes);
+  }
+  return rows;
+}
+
+// Step E: decode one glyph from bit stream at byteOffset
+function decodeU8G2Glyph(hdr, bytes, byteOffset) {
+  try {
+    const { bits_per_char_width: bpw, bits_per_char_height: bph,
+            bits_per_char_x: bpx,   bits_per_char_y: bpy,
+            bits_per_delta_x: bpd,  bits_per_0, bits_per_1 } = hdr;
+
+    const bs     = makeBitStream(bytes, byteOffset);
+    const w      = bs.getUnsigned(bpw);
+    const h      = bs.getUnsigned(bph);
+    const bbxX   = bs.getSigned(bpx);
+    const bbxY   = bs.getSigned(bpy);
+    const dwidth = bs.getSigned(bpd);
+
+    if (w === 0 || h === 0) {
+      return { dwidth, bbxW: w, bbxH: h, bbxX, bbxY, bitmapRows: [] };
+    }
+
+    // RLE decode — u8g2 format:
+    //   for(;;) { a = getUnsigned(bpp0); b = getUnsigned(bpp1);
+    //     do { draw a bg pixels; draw b fg pixels; } while(getUnsigned(1));
+    //     if y>=h break; }
+    const total    = w * h;
+    const pixelArr = new Uint8Array(total);
+    let idx        = 0;
+    let safety     = 0;
+
+    while (idx < total && safety++ < total * 8) {
+      const a = bs.getUnsigned(bits_per_0);   // background run length
+      const b = bs.getUnsigned(bits_per_1);   // foreground run length
+      let cont;
+      do {
+        idx = Math.min(idx + a, total);        // skip 'a' background pixels (already 0)
+        const end = Math.min(idx + b, total);
+        for (let k = idx; k < end; k++) pixelArr[k] = 1;
+        idx = end;
+        if (idx >= total) break;
+        cont = bs.getUnsigned(1);
+      } while (cont !== 0);
+      if (idx >= total) break;
+    }
+
+    return { dwidth, bbxW: w, bbxH: h, bbxX, bbxY, bitmapRows: pixelsToRows(pixelArr, w, h) };
+  } catch (_) {
+    return null;
+  }
+}
+
+// Walk one section of the font binary and collect glyphs into map
+function walkSection(hdr, bytes, sectionOffset, glyphs) {
+  let p      = sectionOffset;
+  let safety = 0;
+  while (p + 1 < bytes.length && bytes[p] !== 0 && safety++ < 2000) {
+    const enc      = bytes[p];
+    const jumpSize = bytes[p + 1];
+    if (jumpSize === 0) break;
+    const glyph = decodeU8G2Glyph(hdr, bytes, p + 2);
+    if (glyph) glyphs.set(enc, glyph);
+    p += jumpSize;
+  }
+}
+
+// Parse full U8g2 .c font text → same shape as parseBDF()
+function parseU8G2Font(text) {
+  const bytes = parseCFontBytes(text);
+  if (bytes.length < 23) return null;
+
+  const hdr         = parseU8G2Header(bytes);
+  const fontAscent  = hdr.ascent_A;
+  const fontDescent = Math.abs(hdr.descent_g);
+  const glyphs      = new Map();
+
+  const upperStart = 23 + hdr.start_pos_upper_A;
+  const lowerStart = 23 + hdr.start_pos_lower_a;
+
+  if (upperStart < bytes.length) {
+    walkSection(hdr, bytes, upperStart, glyphs);
+  }
+  if (lowerStart < bytes.length && lowerStart !== upperStart) {
+    walkSection(hdr, bytes, lowerStart, glyphs);
+  }
+
+  return { glyphs, fontAscent, fontDescent };
+}
+
+// Step F: fetch .c with cache
+async function fetchU8G2(fontName) {
+  if (fontName in u8g2Cache) return u8g2Cache[fontName];
+  try {
+    const r = await fetch(U8G2_FONT_BASE + fontName + '.c');
+    if (!r.ok) { u8g2Cache[fontName] = null; return null; }
+    const parsed = parseU8G2Font(await r.text());
+    u8g2Cache[fontName] = parsed;
+    return parsed;
+  } catch (_) {
+    u8g2Cache[fontName] = null;
+    return null;
+  }
+}
+
+// ── Text renderer (BDF glyph map → ImageData) ────────────────────────────────
 function renderText(text, bdf, w, h) {
   const { glyphs, fontAscent } = bdf;
 
-  // White canvas
   const data = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < data.length; i += 4) {
     data[i] = data[i + 1] = data[i + 2] = 255;
     data[i + 3] = 255;
   }
 
-  // Measure total advance width
   let textW = 0;
   for (const ch of text) {
     const g = glyphs.get(ch.codePointAt(0));
@@ -589,7 +2932,6 @@ function renderText(text, bdf, w, h) {
     const { dwidth, bbxW, bbxH, bbxX, bbxY, bitmapRows } = g;
 
     for (let row = 0; row < bbxH; row++) {
-      // BDF y_offset is from baseline upward; canvas Y goes downward
       const cy = baseline - bbxY - bbxH + row;
       if (cy < 0 || cy >= h) continue;
 
@@ -600,8 +2942,8 @@ function renderText(text, bdf, w, h) {
         const cx = penX + bbxX + col;
         if (cx < 0 || cx >= w) continue;
 
-        const byteIdx = col >> 3;        // floor(col / 8)
-        const bitIdx  = 7 - (col & 7);  // MSB first
+        const byteIdx = col >> 3;
+        const bitIdx  = 7 - (col & 7);
         if ((bytes[byteIdx] >> bitIdx) & 1) {
           const idx = (cy * w + cx) * 4;
           data[idx] = data[idx + 1] = data[idx + 2] = 0;
@@ -677,24 +3019,41 @@ async function renderPreview() {
   const dispH = Math.max(8, Math.min(512, parseInt(document.getElementById('dispH').value)  || 64));
   const scale = parseInt(document.getElementById('scaleSelect').value) || 2;
 
-  setStatus('Loading BDF…');
+  setStatus('Loading font…');
   clearCanvas(dispW, dispH, scale, 'white');
   drawPlaceholder('Loading…');
 
-  const bdf = await fetchBDF(font.baseName);
+  // Try BDF first; fall back to U8g2 binary .c
+  let fontData = await fetchBDF(font.baseName);
+  let source   = 'bdf';
 
-  if (!bdf) {
+  if (!fontData) {
+    setStatus('BDF not found, trying .c source…');
+    fontData = await fetchU8G2(font.name);
+    source   = 'c';
+  }
+
+  if (!fontData) {
     clearCanvas(dispW, dispH, scale, 'cross');
-    setStatus(
-      `No BDF source for "${font.baseName}" — TTF-derived font. ` +
-      `Static preview: https://github.com/olikraus/u8g2/wiki/fntlistall`
-    );
+    setStatus(`Font data unavailable for "${font.name}"`);
     return;
   }
 
-  const imgData = renderText(text, bdf, dispW, dispH);
+  // Update actual height from font data if not yet verified
+  if (!font.heightVerified) {
+    const actualH = fontData.fontAscent + fontData.fontDescent;
+    if (actualH > 0) {
+      font.height         = actualH;
+      font.heightVerified = true;
+      updateFontListItem(font);
+    }
+  }
+
+  const imgData = renderText(text, fontData, dispW, dispH);
   showOnCanvas(imgData, scale, dispW, dispH);
-  setStatus(`${font.baseName}.bdf · ascent ${bdf.fontAscent} · ${bdf.glyphs.size} glyphs`);
+
+  const srcInfo = source === 'bdf' ? `${font.baseName}.bdf` : `${font.name}.c`;
+  setStatus(`${srcInfo} · ascent ${fontData.fontAscent} · ${fontData.glyphs.size} glyphs`);
 }
 
 // ── Utility ──────────────────────────────────────────────────────────────────
@@ -743,16 +3102,28 @@ function setupEvents() {
     applyFilters();
   });
 
-  // Mode / charset checkboxes
-  document.querySelectorAll('[id^="m_"], [id^="c_"]').forEach(el =>
-    el.addEventListener('change', applyFilters)
-  );
+  // Tri-state filter buttons
+  const cycle = { any: 'req', req: 'exc', exc: 'any' };
+  const icons  = { any: '–', req: '✓', exc: '✗' };
+
+  document.querySelectorAll('.tri-check').forEach(btn => {
+    // Store label, prepend initial prefix
+    btn.dataset.label = btn.textContent;
+    btn.textContent   = icons.any + btn.dataset.label;
+
+    btn.addEventListener('click', () => {
+      const s = cycle[btn.dataset.state];
+      btn.dataset.state = s;
+      btn.textContent   = icons[s] + btn.dataset.label;
+      applyFilters();
+    });
+  });
 
   // Copy name
   document.getElementById('copyBtn').addEventListener('click', () => {
     if (!selectedName) return;
     navigator.clipboard.writeText(selectedName).then(() => {
-      const btn = document.getElementById('copyBtn');
+      const btn  = document.getElementById('copyBtn');
       const prev = btn.textContent;
       btn.textContent = 'Copied!';
       setTimeout(() => { btn.textContent = prev; }, 1200);
