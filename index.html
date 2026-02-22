@@ -3437,14 +3437,15 @@ async function renderPreview() {
   clearCanvas(dispW, dispH, scale, 'white');
   drawPlaceholder('Loading…');
 
-  // Try BDF first; fall back to U8g2 binary .c
-  let fontData = await fetchBDF(font.baseName);
-  let source   = 'bdf';
+  // Prefer U8g2 binary .c first (faster + exact variant coverage),
+  // then fall back to BDF base font if needed.
+  let fontData = await fetchU8G2(font.name);
+  let source   = 'c';
 
   if (!fontData || (fontData.glyphs && fontData.glyphs.size === 0)) {
-    setStatus(fontData ? 'BDF has no glyphs, trying .c source…' : 'BDF not found, trying .c source…');
-    fontData = await fetchU8G2(font.name);
-    source   = 'c';
+    setStatus(fontData ? '.c has no glyphs, trying BDF source…' : '.c not found, trying BDF source…');
+    fontData = await fetchBDF(font.baseName);
+    source   = 'bdf';
   }
 
   if (!fontData) {
