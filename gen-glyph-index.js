@@ -8,6 +8,9 @@ const FONT_LIST_URL = 'https://raw.githubusercontent.com/wiki/olikraus/u8g2/fntl
 const U8G2_FONT_BASE = 'https://cdn.jsdelivr.net/gh/olikraus/u8g2@master/tools/font/build/single_font_files/';
 const OUT_PATH = path.join(__dirname, 'glyph-index.json');
 const CONCURRENCY = 20;
+const LIST_TIMEOUT_MS = 20000;
+const FONT_TIMEOUT_MS = 15000;
+const VERBOSE = true;
 
 function parseFontNames(text) {
   const seen = new Set();
@@ -26,9 +29,15 @@ function parseFontNames(text) {
 }
 
 function parseCFontBytes(text) {
-  const eqMatch = text.match(/[)\]]\s*=/);
-  if (!eqMatch) return new Uint8Array(0);
-  const afterEq = text.slice(eqMatch.index + eqMatch[0].length);
+  const declMatch = text.match(/const\s+uint8_t\s+\w+\s*\[[^\]]*\][\s\S]{0,200}?=\s*/m);
+  let afterEq;
+  if (declMatch) {
+    afterEq = text.slice(declMatch.index + declMatch[0].length);
+  } else {
+    const eqMatch = text.match(/[)\]]\s*=/);
+    if (!eqMatch) return new Uint8Array(0);
+    afterEq = text.slice(eqMatch.index + eqMatch[0].length);
+  }
 
   const bytes = [];
   const strRe = /"((?:[^"\\]|\\.)*)"/g;
@@ -82,6 +91,25 @@ function parseU8G2Header(bytes) {
   };
 }
 
+function headerLooksSane(hdr, bytesLen) {
+  if (!hdr) return false;
+  if (hdr.bits_per_0 < 0 || hdr.bits_per_0 > 8) return false;
+  if (hdr.bits_per_1 < 0 || hdr.bits_per_1 > 8) return false;
+  if (hdr.bits_per_char_width <= 0 || hdr.bits_per_char_width > 8) return false;
+  if (hdr.bits_per_char_height <= 0 || hdr.bits_per_char_height > 8) return false;
+  if (hdr.bits_per_char_x < 0 || hdr.bits_per_char_x > 8) return false;
+  if (hdr.bits_per_char_y < 0 || hdr.bits_per_char_y > 8) return false;
+  if (hdr.bits_per_delta_x < 0 || hdr.bits_per_delta_x > 8) return false;
+
+  const upperStart = 23 + hdr.start_pos_upper_A;
+  const lowerStart = 23 + hdr.start_pos_lower_a;
+  const unicodeStart = 23 + hdr.start_pos_unicode;
+  if (upperStart < 23 || upperStart > bytesLen + 2) return false;
+  if (lowerStart < 23 || lowerStart > bytesLen + 2) return false;
+  if (unicodeStart < 23 || unicodeStart > bytesLen + 2) return false;
+  return true;
+}
+
 function makeBitStream(bytes, byteOffset) {
   let bitPos = 0;
   function getUnsigned(cnt) {
@@ -104,12 +132,15 @@ function makeBitStream(bytes, byteOffset) {
 
 function decodeU8G2Glyph(hdr, bytes, byteOffset) {
   try {
+    if (!hdr || byteOffset < 0 || byteOffset >= bytes.length) return false;
     const bs = makeBitStream(bytes, byteOffset);
     const w = bs.getUnsigned(hdr.bits_per_char_width);
     const h = bs.getUnsigned(hdr.bits_per_char_height);
     bs.getSigned(hdr.bits_per_char_x);
     bs.getSigned(hdr.bits_per_char_y);
     bs.getSigned(hdr.bits_per_delta_x);
+    // Guard against corrupted decode paths that would otherwise run very long.
+    if (w > 128 || h > 128) return false;
     if (w === 0 || h === 0) return true;
 
     const total = w * h;
@@ -185,12 +216,15 @@ function parseFontCodePoints(cText) {
   if (bytes.length < 23) return [];
 
   const hdr = parseU8G2Header(bytes);
+  if (!headerLooksSane(hdr, bytes.length)) return [];
   const cps = [];
 
+  const base8Start = 23;
   const upperStart = 23 + hdr.start_pos_upper_A;
   const lowerStart = 23 + hdr.start_pos_lower_a;
   const unicodeStart = 23 + hdr.start_pos_unicode;
 
+  if (base8Start < bytes.length) walkSection(hdr, bytes, base8Start, cps);
   if (upperStart < bytes.length) walkSection(hdr, bytes, upperStart, cps);
   if (lowerStart < bytes.length && lowerStart !== upperStart) walkSection(hdr, bytes, lowerStart, cps);
   if (hdr.start_pos_unicode > 0 && unicodeStart < bytes.length) walkUnicodeSection(hdr, bytes, unicodeStart, cps);
@@ -225,6 +259,25 @@ async function withConcurrency(arr, concurrency, fn) {
   return results;
 }
 
+async function fetchTextWithTimeout(url, timeoutMs, retries = 0) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs);
+    try {
+      const resp = await fetch(url, { signal: ac.signal });
+      clearTimeout(timer);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      return await resp.text();
+    } catch (e) {
+      clearTimeout(timer);
+      lastErr = e;
+      if (attempt < retries) process.stderr.write(`Retry ${attempt + 1}/${retries} for ${url}\n`);
+    }
+  }
+  throw lastErr || new Error('fetch failed');
+}
+
 async function main() {
   if (typeof fetch !== 'function') {
     console.error('Node.js 18+ is required for built-in fetch');
@@ -232,22 +285,31 @@ async function main() {
   }
 
   process.stderr.write('Fetching font list... ');
-  const listText = await fetch(FONT_LIST_URL).then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.text();
-  });
+  const listText = await fetchTextWithTimeout(FONT_LIST_URL, LIST_TIMEOUT_MS, 2);
   const fontNames = parseFontNames(listText);
   process.stderr.write(`${fontNames.length} fonts\n`);
+  process.stderr.write(`Config: concurrency=${CONCURRENCY}, listTimeout=${LIST_TIMEOUT_MS}ms, fontTimeout=${FONT_TIMEOUT_MS}ms\n`);
 
   const fonts = {};
   let done = 0;
+  let started = 0;
+  let ok = 0;
+  let fail = 0;
+  const startedAt = Date.now();
+  const heartbeat = setInterval(() => {
+    const elapsed = Math.round((Date.now() - startedAt) / 1000);
+    process.stderr.write(
+      `Heartbeat: ${done}/${fontNames.length} processed, ${ok} indexed, ${fail} failed, ${elapsed}s elapsed\n`
+    );
+  }, 5000);
 
   await withConcurrency(fontNames, CONCURRENCY, async (name) => {
+    const t0 = Date.now();
+    const ordinal = ++started;
+    if (VERBOSE) process.stderr.write(`[${ordinal}/${fontNames.length}] START ${name}\n`);
     try {
       const url = U8G2_FONT_BASE + name + '.c';
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const text = await resp.text();
+      const text = await fetchTextWithTimeout(url, FONT_TIMEOUT_MS, 0);
       const cps = parseFontCodePoints(text);
       const ranges = buildRangesFromCodePoints(cps);
       if (ranges.length > 0) {
@@ -256,15 +318,32 @@ async function main() {
           count: cps.length,
           source: 'u8g2-c'
         };
+        ok++;
+        if (VERBOSE) {
+          const ms = Date.now() - t0;
+          process.stderr.write(`[${ordinal}/${fontNames.length}] OK    ${name} cps=${cps.length} ranges=${ranges.length} ${ms}ms\n`);
+        }
+      } else {
+        fail++;
+        if (VERBOSE) {
+          const ms = Date.now() - t0;
+          process.stderr.write(`[${ordinal}/${fontNames.length}] EMPTY ${name} (0 ranges) ${ms}ms\n`);
+        }
       }
-    } catch (_) {
-      // skip
+    } catch (e) {
+      fail++;
+      if (VERBOSE) {
+        const ms = Date.now() - t0;
+        const msg = e && e.message ? e.message : String(e);
+        process.stderr.write(`[${ordinal}/${fontNames.length}] FAIL  ${name} ${ms}ms :: ${msg}\n`);
+      }
     }
     done++;
-    if (done % 50 === 0 || done === fontNames.length) {
-      process.stderr.write(`  ${done}/${fontNames.length}\r`);
+    if (done % 10 === 0 || done === fontNames.length) {
+      process.stderr.write(`Progress: ${done}/${fontNames.length} (ok=${ok}, fail=${fail})\n`);
     }
   });
+  clearInterval(heartbeat);
 
   process.stderr.write(`\nWriting ${OUT_PATH}...\n`);
   const out = {
@@ -273,7 +352,8 @@ async function main() {
     fonts
   };
   fs.writeFileSync(OUT_PATH, JSON.stringify(out), 'utf8');
-  process.stderr.write(`Done. Indexed ${Object.keys(fonts).length} fonts.\n`);
+  const elapsed = Math.round((Date.now() - startedAt) / 1000);
+  process.stderr.write(`Done. Indexed ${Object.keys(fonts).length} fonts. ok=${ok} fail=${fail} elapsed=${elapsed}s\n`);
 }
 
 main().catch(err => {
