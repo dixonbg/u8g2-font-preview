@@ -48,6 +48,13 @@ node gen-heights.js
 node gen-glyph-index.js
 ```
 
+## License
+
+The original source code in this project is licensed under the
+[BSD 2-Clause License](LICENSE). Third-party U8g2 and font materials retain
+their own copyrights and license terms and are not relicensed by this project.
+See [Third-party notices](THIRD_PARTY_NOTICES.md).
+
 ## Credits
 
 [U8g2](https://github.com/olikraus/u8g2) is created by Oliver Kraus. Its library
