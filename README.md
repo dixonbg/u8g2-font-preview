@@ -50,6 +50,7 @@ node gen-glyph-index.js
 
 ## Credits
 
-[U8g2](https://github.com/olikraus/u8g2) is created by Oliver Kraus and licensed
-under LGPL-2.1. Individual BDF fonts remain under their respective authors' and
-projects' licenses.
+[U8g2](https://github.com/olikraus/u8g2) is created by Oliver Kraus. Its library
+code is licensed under BSD-2-Clause. Individual fonts use separate licenses;
+consult the upstream font group and source before redistributing a selected font.
+See [Third-party notices](THIRD_PARTY_NOTICES.md) for details.

@@ -3,7 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>U8g2 Font Preview</title>
+  <title>U8g2 Font Preview — Search and Test Fonts Online</title>
+  <meta name="description" content="Search, filter, and preview more than 2,000 U8g2 bitmap fonts for OLED and embedded displays directly in your browser.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0d1117">
+  <link rel="canonical" href="https://dixonbg.github.io/u8g2-font-preview/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="U8g2 Font Preview">
+  <meta property="og:title" content="U8g2 Font Preview — Search and Test Fonts Online">
+  <meta property="og:description" content="Search, filter, and preview more than 2,000 U8g2 bitmap fonts for OLED and embedded displays.">
+  <meta property="og:url" content="https://dixonbg.github.io/u8g2-font-preview/">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="U8g2 Font Preview — Search and Test Fonts Online">
+  <meta name="twitter:description" content="Search, filter, and preview more than 2,000 U8g2 bitmap fonts for OLED and embedded displays.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "U8g2 Font Preview",
+    "description": "Search, filter, and preview more than 2,000 U8g2 bitmap fonts for OLED and embedded displays.",
+    "url": "https://dixonbg.github.io/u8g2-font-preview/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "codeRepository": "https://github.com/dixonbg/u8g2-font-preview"
+  }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -221,6 +255,8 @@
     .tool-list a:hover { text-decoration: underline; }
     .tool-desc { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; }
     .credits-text { font-size: 11px; color: var(--muted); line-height: 1.7; }
+    .credits-text a { color: var(--accent); text-decoration: none; }
+    .credits-text a:hover { text-decoration: underline; }
 
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -380,9 +416,11 @@
       <div class="panel">
         <h3>Credits</h3>
         <p class="credits-text">
-          U8g2 © Oliver Kraus (LGPL 2.1) · BDF fonts © their respective authors (various open
-          licenses) · Font data served via jsDelivr CDN · No data collected · BDF-sourced fonts
-          render via .bdf files; TTF-derived fonts render via the U8g2 binary .c font format.
+          <a href="https://github.com/olikraus/u8g2" target="_blank" rel="noopener">U8g2</a>
+          © Oliver Kraus (BSD-2-Clause) · Individual fonts remain under their respective
+          <a href="https://github.com/olikraus/u8g2/wiki/fntgrp" target="_blank" rel="noopener">authors' licenses</a>
+          · Font data served via jsDelivr CDN · No data collected · BDF-sourced fonts render via
+          .bdf files; other fonts render via the U8g2 binary .c font format.
         </p>
       </div>
     </div>
