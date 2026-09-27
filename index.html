@@ -178,6 +178,13 @@
     }
     .num-input:focus { outline: none; border-color: var(--accent); }
     select.num-input { width: auto; cursor: pointer; text-align: left; }
+    .toggle-btn {
+      padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--muted); font-size: 11px;
+      font-family: inherit; cursor: pointer;
+    }
+    .toggle-btn:hover { border-color: var(--accent); color: var(--text); }
+    .toggle-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: #0f2038; }
 
     .canvas-outer {
       display: inline-block;
@@ -376,6 +383,16 @@
             <option value="4">4×</option>
           </select>
         </div>
+        <div class="ctrl-group">
+          <label for="alignSelect">Align:</label>
+          <select class="num-input" id="alignSelect" title="Horizontal alignment of the text on the display">
+            <option value="left">Left</option>
+            <option value="center" selected>Center</option>
+            <option value="right">Right</option>
+          </select>
+        </div>
+        <button type="button" class="toggle-btn" id="invertBtn" aria-pressed="false"
+                title="Invert colors — white pixels on black, like an OLED">Invert</button>
       </div>
 
       <div class="canvas-outer">
@@ -3432,12 +3449,16 @@ async function fetchU8G2(fontName) {
 }
 
 // ── Text renderer (BDF glyph map → ImageData) ────────────────────────────────
-function renderText(text, bdf, w, h) {
+function renderText(text, bdf, w, h, opts = {}) {
   const { glyphs, fontAscent } = bdf;
+  const align  = opts.align  || 'center';
+  const invert = !!opts.invert;
+  const bg = invert ? 0 : 255;
+  const fg = invert ? 255 : 0;
 
   const data = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = data[i + 1] = data[i + 2] = 255;
+    data[i] = data[i + 1] = data[i + 2] = bg;
     data[i + 3] = 255;
   }
 
@@ -3447,7 +3468,9 @@ function renderText(text, bdf, w, h) {
     if (g) textW += g.dwidth;
   }
 
-  const xStart   = Math.round((w - textW) / 2);
+  const xStart   = align === 'left'  ? 0
+                 : align === 'right' ? w - textW
+                 : Math.round((w - textW) / 2);
   const baseline = Math.round(h / 2 + fontAscent / 2);
 
   let penX = xStart;
@@ -3472,7 +3495,7 @@ function renderText(text, bdf, w, h) {
         const bitIdx  = 7 - (col & 7);
         if ((bytes[byteIdx] >> bitIdx) & 1) {
           const idx = (cy * w + cx) * 4;
-          data[idx] = data[idx + 1] = data[idx + 2] = 0;
+          data[idx] = data[idx + 1] = data[idx + 2] = fg;
           data[idx + 3] = 255;
         }
       }
@@ -3518,7 +3541,7 @@ function clearCanvas(dispW, dispH, scale, pattern) {
     ctx.moveTo(canvas.width, 0); ctx.lineTo(0, canvas.height);
     ctx.stroke();
   } else {
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = pattern === 'black' ? '#000' : '#fff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }
@@ -3544,6 +3567,8 @@ async function renderPreview() {
   const dispW = Math.max(8, Math.min(1024, parseInt(document.getElementById('dispW').value)  || 128));
   const dispH = Math.max(8, Math.min(1024, parseInt(document.getElementById('dispH').value)  || 64));
   const scale = parseInt(document.getElementById('scaleSelect').value) || 2;
+  const align  = document.getElementById('alignSelect').value;
+  const invert = document.getElementById('invertBtn').getAttribute('aria-pressed') === 'true';
 
   // A newer render (font switch, text edit) supersedes this one; a slow
   // download for the previous font must not overwrite the current preview.
@@ -3551,7 +3576,7 @@ async function renderPreview() {
   const stale = () => seq !== renderSeq;
 
   setStatus('Loading font…');
-  clearCanvas(dispW, dispH, scale, 'white');
+  clearCanvas(dispW, dispH, scale, invert ? 'black' : 'white');
   drawPlaceholder('Loading…');
 
   // Prefer U8g2 binary .c first (faster + exact variant coverage),
@@ -3589,7 +3614,7 @@ async function renderPreview() {
     renderGlyphBrowser(font.name);
   }
 
-  const imgData = renderText(text, fontData, dispW, dispH);
+  const imgData = renderText(text, fontData, dispW, dispH, { align, invert });
   showOnCanvas(imgData, scale, dispW, dispH);
 
   const missing = getMissingCodePoints(text, fontData.glyphs);
@@ -3632,6 +3657,12 @@ function loadUIState() {
       const sv = String(s.scale);
       if (allowed.has(sv)) scaleSel.value = sv;
     }
+    if (['left', 'center', 'right'].includes(s.align)) {
+      document.getElementById('alignSelect').value = s.align;
+    }
+    if (typeof s.invert === 'boolean') {
+      document.getElementById('invertBtn').setAttribute('aria-pressed', String(s.invert));
+    }
   } catch (_) {}
 }
 
@@ -3641,7 +3672,9 @@ function saveUIState() {
       previewText: document.getElementById('previewText').value,
       dispW: parseInt(document.getElementById('dispW').value) || 128,
       dispH: parseInt(document.getElementById('dispH').value) || 64,
-      scale: document.getElementById('scaleSelect').value
+      scale: document.getElementById('scaleSelect').value,
+      align: document.getElementById('alignSelect').value,
+      invert: document.getElementById('invertBtn').getAttribute('aria-pressed') === 'true'
     }));
   } catch (_) {}
 }
@@ -3668,6 +3701,16 @@ function setupEvents() {
   document.getElementById('dispW').addEventListener('input', triggerRender);
   document.getElementById('dispH').addEventListener('input', triggerRender);
   document.getElementById('scaleSelect').addEventListener('change', () => {
+    saveUIState();
+    renderPreview();
+  });
+  document.getElementById('alignSelect').addEventListener('change', () => {
+    saveUIState();
+    renderPreview();
+  });
+  document.getElementById('invertBtn').addEventListener('click', function () {
+    const on = this.getAttribute('aria-pressed') !== 'true';
+    this.setAttribute('aria-pressed', String(on));
     saveUIState();
     renderPreview();
   });

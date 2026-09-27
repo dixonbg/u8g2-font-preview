@@ -13,7 +13,7 @@ No installation, account, or upload required.
 - Search fonts by name or by the characters they contain.
 - Filter by pixel height, rendering mode, and character set.
 - Browse every available glyph and insert one into the preview with a click.
-- Match the dimensions and scale of your target display.
+- Match the dimensions and scale of your target display, align text left/center/right, and flip to an inverted white-on-black view.
 - Copy the selected U8g2 font name or open its source and wiki pages.
 
 The previewer reads the official U8g2 font list and renders both BDF-backed and
